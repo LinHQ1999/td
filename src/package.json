@@ -1,0 +1,14 @@
+{
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "private": true,
+  "devDependencies": {
+    "iconv-lite": "^0.6.3"
+  },
+  "dependencies": {
+    "electron-store": "^8.0.1",
+    "tiddlywiki": "^5.2.0"
+  }
+}
