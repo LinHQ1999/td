@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "package": "electron-packager --overwrite src td --icon yaoming.ico",
+    "package": "electron-packager --overwrite src td --icon yaoming.ico --asar",
     "start": "electron src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
