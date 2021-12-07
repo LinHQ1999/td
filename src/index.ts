@@ -1,9 +1,8 @@
-// 控制应用生命周期和创建原生浏览器窗口的模组
-const { dialog, app, BrowserWindow } = require('electron')
-const Wiki = require('./main/wiki');
-const { initMenu } = require('./main/menu');
-const path = require('path')
-const { config } = require('./main/config');
+import { app, BrowserWindow, dialog } from 'electron'
+import path from 'path'
+import { config } from './main/config'
+import { initMenu } from './main/menu'
+import { Wiki } from './main/wiki'
 
 initMenu();
 
@@ -31,7 +30,9 @@ app.whenReady().then(() => {
 })
 
 app.on('activate', function () {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+    if (BrowserWindow.getAllWindows().length === 0) {
+        Wiki.createWindow().loadFile(path.join(__dirname, "render", "oops.html"))
+    }
 })
 
 app.on('window-all-closed', function () {

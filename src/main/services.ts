@@ -1,12 +1,16 @@
-const path = require('path')
-const { fork, ChildProcess } = require('child_process')
+import path from 'path'
+import { ChildProcess, fork } from 'child_process'
 
 class TWService {
+    exec: string
+    decoder: TextDecoder
+    services: Map<number, ChildProcess>
+
     constructor(decode = "gbk") {
         this.exec = path.join(__dirname, "..", "node_modules", "tiddlywiki", "tiddlywiki.js")
         this.decoder = new TextDecoder(decode)
         // Map<port, process>
-        this.services = new Map();
+        this.services = new Map<number, ChildProcess>()
     }
 
     /**
@@ -15,7 +19,7 @@ class TWService {
      * @param {number} port 端口，如果被占用则递增
      * @returns 
      */
-    launch(dir, port) {
+    launch(dir: string, port: number) {
         let ports = Array.from(this.services.keys())
         if (ports.includes(port)) {
             // 比最大的端口号大 1
@@ -39,7 +43,7 @@ class TWService {
      * 
      * @param {ChildProcess} service 进程
      */
-    stopPs(process) {
+    stopPs(process: ChildProcess) {
         process.kill()
     }
 
@@ -56,4 +60,4 @@ class TWService {
     }
 }
 
-exports.services = new TWService();
+export let services = new TWService();

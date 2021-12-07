@@ -1,5 +1,5 @@
-const { Menu, dialog } = require("electron")
-const Wiki = require("./wiki")
+import { Menu, dialog } from 'electron'
+import { Wiki } from './wiki'
 
 let menu = [
     {
@@ -7,7 +7,7 @@ let menu = [
         submenu: [
             {
                 label: '打开目录',
-                async click(_, browserWindow, event) {
+                async click(_: any, browserWindow: Electron.BrowserWindow, event: Electron.Event) {
                     let selected = await dialog.showOpenDialog(browserWindow, { properties: ["openDirectory"] })
                     if (selected.filePaths.length != 0) {
                         new Wiki(selected.filePaths[0])
@@ -22,6 +22,6 @@ let menu = [
     }
 ]
 
-exports.initMenu = function () {
-    Menu.setApplicationMenu(Menu.buildFromTemplate(menu))
+export function initMenu (){
+    Menu.setApplicationMenu(Menu.buildFromTemplate(menu as any))
 }
