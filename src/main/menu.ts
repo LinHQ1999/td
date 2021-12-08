@@ -1,4 +1,4 @@
-import { dialog, Menu } from 'electron'
+import { dialog, Menu, shell } from 'electron'
 import { Wiki } from './wiki'
 
 let menu = [
@@ -15,9 +15,21 @@ let menu = [
                 }
             },
             { type: 'separator' },
-            { role: 'reload' },
-            { role: 'quit' },
+            { role: 'quit' }
 
+        ]
+    },
+    {
+        label: '浏览',
+        submenu: [
+            {
+                label: '浏览器中打开',
+                async click(_: any, browserWindow: Electron.BrowserWindow, event: Electron.Event) {
+                    shell.openExternal(browserWindow.webContents.getURL())
+                }
+            },
+            { type: 'separator' },
+            { role: 'reload' },
         ]
     }
 ]

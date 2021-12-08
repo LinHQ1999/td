@@ -23,10 +23,9 @@ class TWService {
      * @returns 
      */
     launch(dir: string, port: number) {
-        let ports = Array.from(this.services.keys()).sort().reverse()
-        if (ports.includes(port)) {
-            // 比最大的端口号大 1
-            port = ports[0] + 1
+        // 先判断在不在表中很有必要，否则端口可能会取到负数
+        if (this.services.has(port)) {
+            port = Math.max(...Array.from(this.services.keys())) + 1
         }
 
         // 原生方式启动
@@ -46,23 +45,22 @@ class TWService {
     }
 
     /**
-     * 请使用 stop 和 stopAll
+     * 根据端口号停止服务进程
      * 
-     * @param {ChildProcess} service 进程
+     * @param port 端口号
      */
-    stopPs(process: ChildProcess) {
-        process.kill()
-    }
-
     stop(port: number) {
         let ps = this.services.get(port)
-        if (ps != null)
-            this.stopPs(ps);
+        if (ps != null) {
+            ps.kill()
+            // 同时从表中移除
+            this.services.delete(port)
+        }
     }
 
     stopAll() {
-        for (let [_, service] of this.services) {
-            this.stopPs(service)
+        for (let [port, _] of this.services) {
+            this.stop(port)
         }
     }
 }

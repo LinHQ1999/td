@@ -37,15 +37,15 @@ export class Wiki {
         if (existsSync(icon))
             this.win.setIcon(icon)
 
-        // 关闭窗口的同时也关闭服务
-        this.win.once("close", _ => services.stop(this.real_port))
-
         // 服务一旦到达就加载页面，仅加载一次，多了会闪退
         server.ps.stdout.once("data", () => {
             this.win.loadURL(`http://localhost:${this.real_port}`)
                 .then(() => this.win.setTitle(this.win.webContents.getTitle()))
                 .catch(() => this.win.reload())
         })
+
+        // 关闭窗口的同时也关闭服务
+        this.win.once("close", _ => services.stop(this.real_port))
 
         // 缓存最后一次打开
         config.lastOpen = dir
