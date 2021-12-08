@@ -56,7 +56,7 @@ export class Wiki {
      * 
      * @returns null
      */
-    static createWindow(nomenu = true) {
+    static createWindow(title="等待服务启动", nomenu = true) {
         let win = new BrowserWindow({
             width: 1200,
             height: 800,
@@ -66,7 +66,7 @@ export class Wiki {
                 preload: path.join(__dirname, "preloads", "preload.js")
             }
         })
-        win.setTitle("等待服务到达……")
+        win.setTitle(title)
         return win
     }
 }

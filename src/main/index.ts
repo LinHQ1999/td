@@ -1,7 +1,6 @@
 import { app, BrowserWindow, dialog, Notification } from 'electron'
-import { existsSync } from 'fs-extra'
 import { error as err } from 'electron-log'
-import path from 'path'
+import { existsSync } from 'fs-extra'
 import { config } from './config'
 import { initMenu } from './menu'
 import { services } from './services'
@@ -33,17 +32,20 @@ initMenu();
         }
     } catch (error) {
         err(error)
+        app.quit()
     }
 })()
 
 app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) {
-        Wiki.createWindow().loadFile(path.join(__dirname, "render", "oops.html"))
+        // Wiki.createWindow().loadFile(path.join(__dirname, "render", "oops.html"))
+        app.quit()
     }
 })
 
 app.on('window-all-closed', function () {
     if (process.platform !== 'darwin') {
+        services.stopAll()
         app.quit()
     }
 })

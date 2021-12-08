@@ -1,17 +1,12 @@
-import { ChildProcess, exec as exec_, fork, spawn } from 'child_process'
+import { ChildProcess, exec as exec_, spawn } from 'child_process'
 import { error } from 'electron-log'
 import path from 'path'
 import { promisify } from 'util'
 
 class TWService {
     tw: string = ""
-    decoder: TextDecoder
     services: Map<number, ChildProcess>
-
-    constructor(decode = "gbk") {
-        // this.exec = path.join(__dirname, "..", "node_modules", "tiddlywiki", "tiddlywiki.js")
-        this.decoder = new TextDecoder(decode)
-        // Map<port, process>
+    constructor() {
         this.services = new Map<number, ChildProcess>()
     }
 
@@ -31,6 +26,7 @@ class TWService {
         // let ps = fork(this.tw, [".", "--listen", "host=0.0.0.0", `port=${port}`, "anon-username=林汉青"], {
         //     cwd: dir
         // })
+        // 原生方式启动
         let ps = spawn("node", [this.tw, ".", "--listen", "host=0.0.0.0", `port=${port}`, "anon-username=林汉青"], {
             cwd: dir
         })
