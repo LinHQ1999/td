@@ -2,10 +2,10 @@ import { app, BrowserWindow, dialog, Notification } from 'electron'
 import { existsSync } from 'fs-extra'
 import { error as err } from 'electron-log'
 import path from 'path'
-import { config } from './main/config'
-import { initMenu } from './main/menu'
-import { services } from './main/services'
-import { Wiki } from './main/wiki'
+import { config } from './config'
+import { initMenu } from './menu'
+import { services } from './services'
+import { Wiki } from './wiki'
 
 initMenu();
 

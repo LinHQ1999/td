@@ -1,4 +1,4 @@
-import { ChildProcess, exec as exec_, fork } from 'child_process'
+import { ChildProcess, exec as exec_, fork, spawn } from 'child_process'
 import { error } from 'electron-log'
 import path from 'path'
 import { promisify } from 'util'
@@ -28,16 +28,16 @@ class TWService {
             port = ports[0] + 1
         }
 
-        let ps = fork(this.tw, [".", "--listen", "host=0.0.0.0", `port=${port}`, "anon-username=林汉青"], {
-            cwd: dir
-        })
-        // let ps = spawn("cmd", ["/c", `"${this.prg}"`, ".", "--listen", "host=0.0.0.0", "port=9080", "anon-username=林汉青"], {
+        // let ps = fork(this.tw, [".", "--listen", "host=0.0.0.0", `port=${port}`, "anon-username=林汉青"], {
         //     cwd: dir
         // })
+        let ps = spawn("node", [this.tw, ".", "--listen", "host=0.0.0.0", `port=${port}`, "anon-username=林汉青"], {
+            cwd: dir
+        })
 
         this.services.set(port, ps)
         ps.on("error", (err) => error(err.message))
-        return port
+        return {ps, port}
     }
 
     /**

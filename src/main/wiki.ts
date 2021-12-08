@@ -1,4 +1,5 @@
 import { BrowserWindow } from 'electron'
+import { existsSync } from 'fs-extra'
 import path from 'path'
 import { config } from './config'
 import { services } from './services'
@@ -21,7 +22,8 @@ export class Wiki {
     constructor(dir: string, window: BrowserWindow | null = null, port: number = 11111) {
         this.dir = dir
         // 始终使用修正后的端口
-        this.real_port = services.launch(dir, port)
+        let server = services.launch(dir, port)
+        this.real_port = server.port
 
         if (!window) {
             // 创建浏览器窗口
@@ -31,14 +33,19 @@ export class Wiki {
         }
 
         // 获取 wiki 中的自定义 ico
-        this.win.setIcon(path.join(dir, "tiddlers", "$__favicon.ico"))
+        let icon = path.join(dir, "tiddlers", "$__favicon.ico")
+        if (existsSync(icon))
+            this.win.setIcon(icon)
 
         // 关闭窗口的同时也关闭服务
-        this.win.on("close", _ => services.stop(this.real_port))
+        this.win.once("close", _ => services.stop(this.real_port))
 
-        // 服务到达前不停刷新
-        this.win.loadURL(`http://localhost:${this.real_port}`)
-            .catch(() => this.win.reload())
+        // 服务一旦到达就加载页面，仅加载一次，多了会闪退
+        server.ps.stdout.once("data", () => {
+            this.win.loadURL(`http://localhost:${this.real_port}`)
+                .then(() => this.win.setTitle(this.win.webContents.getTitle()))
+                .catch(() => this.win.reload())
+        })
 
         // 缓存最后一次打开
         config.lastOpen = dir
@@ -50,7 +57,7 @@ export class Wiki {
      * @returns null
      */
     static createWindow(nomenu = true) {
-        return new BrowserWindow({
+        let win = new BrowserWindow({
             width: 1200,
             height: 800,
             autoHideMenuBar: nomenu,
@@ -59,5 +66,7 @@ export class Wiki {
                 preload: path.join(__dirname, "preloads", "preload.js")
             }
         })
+        win.setTitle("等待服务到达……")
+        return win
     }
 }

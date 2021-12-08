@@ -6,7 +6,7 @@
   "scripts": {
     "pack": "tsc && electron-builder --dir",
     "dist": "tsc && electron-builder --win=portable",
-    "start": "tsc && electron out/index.js",
+    "start": "tsc && electron .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
