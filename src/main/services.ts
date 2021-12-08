@@ -1,13 +1,15 @@
+import { ChildProcess, exec as exec_, fork } from 'child_process'
+import { error } from 'electron-log'
 import path from 'path'
-import { ChildProcess, fork } from 'child_process'
+import { promisify } from 'util'
 
 class TWService {
-    exec: string
+    tw: string = ""
     decoder: TextDecoder
     services: Map<number, ChildProcess>
 
     constructor(decode = "gbk") {
-        this.exec = path.join(__dirname, "..", "node_modules", "tiddlywiki", "tiddlywiki.js")
+        // this.exec = path.join(__dirname, "..", "node_modules", "tiddlywiki", "tiddlywiki.js")
         this.decoder = new TextDecoder(decode)
         // Map<port, process>
         this.services = new Map<number, ChildProcess>()
@@ -20,13 +22,13 @@ class TWService {
      * @returns 
      */
     launch(dir: string, port: number) {
-        let ports = Array.from(this.services.keys())
+        let ports = Array.from(this.services.keys()).sort().reverse()
         if (ports.includes(port)) {
             // 比最大的端口号大 1
             port = ports[0] + 1
         }
 
-        let ps = fork(this.exec, [".", "--listen", "host=0.0.0.0", `port=${port}`, "anon-username=林汉青"], {
+        let ps = fork(this.tw, [".", "--listen", "host=0.0.0.0", `port=${port}`, "anon-username=林汉青"], {
             cwd: dir
         })
         // let ps = spawn("cmd", ["/c", `"${this.prg}"`, ".", "--listen", "host=0.0.0.0", "port=9080", "anon-username=林汉青"], {
@@ -34,8 +36,18 @@ class TWService {
         // })
 
         this.services.set(port, ps)
-        ps.on("error", (err) => console.log(err.message))
+        ps.on("error", (err) => error(err.message))
         return port
+    }
+
+    /**
+     * 必须先执行此方法，否则不能正确启动服务
+     */
+    async setup(): Promise<string> {
+        let exec = promisify(exec_)
+        let out = await exec("npm root -g")
+        this.tw = path.join(out.stdout.trim(), "tiddlywiki", "tiddlywiki.js")
+        return this.tw
     }
 
     /**
@@ -47,7 +59,7 @@ class TWService {
         process.kill()
     }
 
-    stop(port = 9080) {
+    stop(port: number) {
         let ps = this.services.get(port)
         if (ps != null)
             this.stopPs(ps);

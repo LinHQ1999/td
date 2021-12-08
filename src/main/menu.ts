@@ -1,4 +1,4 @@
-import { Menu, dialog } from 'electron'
+import { dialog, Menu } from 'electron'
 import { Wiki } from './wiki'
 
 let menu = [
@@ -22,6 +22,6 @@ let menu = [
     }
 ]
 
-export function initMenu (){
+export function initMenu() {
     Menu.setApplicationMenu(Menu.buildFromTemplate(menu as any))
 }

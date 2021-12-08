@@ -7,6 +7,7 @@ class Config {
     constructor() {
         this.store = new Store()
     }
+    
 
     set lastOpen(dir: string) {
         this.store.set("last", dir)

@@ -1,5 +1,6 @@
 import { BrowserWindow } from 'electron'
 import path from 'path'
+import { config } from './config'
 import { services } from './services'
 
 /**
@@ -10,6 +11,13 @@ export class Wiki {
     real_port: number
     win: BrowserWindow
 
+    /**
+     * 启动新 wiki 并打开新窗口
+     * 
+     * @param dir 启动目录
+     * @param window 是否使用已有的 BrowserWindow
+     * @param port 起始端口，默认 11111
+     */
     constructor(dir: string, window: BrowserWindow | null = null, port: number = 11111) {
         this.dir = dir
         // 始终使用修正后的端口
@@ -22,12 +30,18 @@ export class Wiki {
             this.win = window
         }
 
+        // 获取 wiki 中的自定义 ico
+        this.win.setIcon(path.join(dir, "tiddlers", "$__favicon.ico"))
+
         // 关闭窗口的同时也关闭服务
         this.win.on("close", _ => services.stop(this.real_port))
 
         // 服务到达前不停刷新
         this.win.loadURL(`http://localhost:${this.real_port}`)
-            .catch(_ => this.win.reload())
+            .catch(() => this.win.reload())
+
+        // 缓存最后一次打开
+        config.lastOpen = dir
     }
 
     /**
@@ -35,10 +49,11 @@ export class Wiki {
      * 
      * @returns null
      */
-    static createWindow() {
+    static createWindow(nomenu = true) {
         return new BrowserWindow({
             width: 1200,
             height: 800,
+            autoHideMenuBar: nomenu,
             webPreferences: {
                 nodeIntegration: false,
                 preload: path.join(__dirname, "preloads", "preload.js")
