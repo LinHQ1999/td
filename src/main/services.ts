@@ -1,13 +1,19 @@
-import { ChildProcess, exec as exec_, spawn } from 'child_process'
+import { ChildProcess, spawn } from 'child_process'
 import { error } from 'electron-log'
+import { existsSync } from 'fs-extra'
 import path from 'path'
-import { promisify } from 'util'
 
 class TWService {
     tw: string = ""
     services: Map<number, ChildProcess>
     constructor() {
         this.services = new Map<number, ChildProcess>()
+
+        // 加载环境
+        let nodes = process.env.Path?.split(";").filter(x => x.includes("nodejs"))
+        if (nodes != undefined && nodes.length != 0) {
+            this.tw = path.join(nodes[0], "node_modules", "tiddlywiki", "tiddlywiki.js")
+        }
     }
 
     /**
@@ -23,27 +29,20 @@ class TWService {
             port = ports[0] + 1
         }
 
-        // let ps = fork(this.tw, [".", "--listen", "host=0.0.0.0", `port=${port}`, "anon-username=林汉青"], {
-        //     cwd: dir
-        // })
         // 原生方式启动
         let ps = spawn("node", [this.tw, ".", "--listen", "host=0.0.0.0", `port=${port}`, "anon-username=林汉青"], {
             cwd: dir
         })
-
         this.services.set(port, ps)
         ps.on("error", (err) => error(err.message))
-        return {ps, port}
+        return { ps, port }
     }
 
     /**
      * 必须先执行此方法，否则不能正确启动服务
      */
-    async setup(): Promise<string> {
-        let exec = promisify(exec_)
-        let out = await exec("npm root -g")
-        this.tw = path.join(out.stdout.trim(), "tiddlywiki", "tiddlywiki.js")
-        return this.tw
+    ok(): boolean {
+        return existsSync(this.tw)
     }
 
     /**
