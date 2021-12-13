@@ -5,7 +5,7 @@
   "main": "out/index.js",
   "scripts": {
     "pack": "tsc && electron-builder --dir",
-    "dist": "tsc && electron-builder --win=portable",
+    "dist": "tsc && electron-builder",
     "start": "tsc && electron .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -31,7 +31,10 @@
     "win": {
       "target": [
         {
-          "target": "portable"
+          "target": "dir"
+        },
+        {
+          "target": "7z"
         }
       ]
     }

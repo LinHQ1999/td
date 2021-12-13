@@ -44,9 +44,8 @@ export class Wiki {
                 .catch(() => this.win.reload())
         })
 
-        // 关闭窗口的同时也关闭服务
-        this.win.once("close", _ => services.stop(this.real_port))
-
+        // 关闭窗口之后也关闭服务
+        this.win.once("closed", () => services.stop(this.real_port))
         // 缓存最后一次打开
         config.lastOpen = dir
     }
