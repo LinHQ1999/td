@@ -1,4 +1,4 @@
-import { BrowserWindow } from 'electron'
+import { BrowserWindow, shell } from 'electron'
 import { existsSync } from 'fs-extra'
 import path from 'path'
 import { config } from './config'
@@ -42,6 +42,12 @@ export class Wiki {
             this.win.loadURL(`http://localhost:${this.real_port}`)
                 .then(() => this.win.setTitle(this.win.webContents.getTitle()))
                 .catch(() => this.win.reload())
+        })
+
+        // 页面内的链接始终采用默认浏览器打开而不是新建一个窗口
+        this.win.webContents.setWindowOpenHandler(details => {
+            shell.openExternal(details.url)
+            return {action:'deny'}
         })
 
         // 关闭窗口之后也关闭服务
