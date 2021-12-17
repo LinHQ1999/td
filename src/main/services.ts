@@ -3,9 +3,15 @@ import { error } from 'electron-log'
 import { existsSync } from 'fs-extra'
 import path from 'path'
 
+export interface Service {
+    ps: ChildProcess
+    port: number
+}
+
 class TWService {
     tw: string = ""
     services: Map<number, ChildProcess>
+
     constructor() {
         this.services = new Map<number, ChildProcess>()
 
@@ -19,17 +25,18 @@ class TWService {
     /**
      * 
      * @param {string} dir wiki 所在目录
-     * @param {number} port 端口，如果被占用则递增
+     * @param {number} port 端口，如果被占用则递增，不应由用户设定
+     * @param {string[]} args 额外启动参数，一行一组
      * @returns 
      */
-    launch(dir: string, port: number) {
+    launch(dir: string, port: number, ...args: string[]): Service {
         // 先判断在不在表中很有必要，否则端口可能会取到负数
         if (this.services.has(port)) {
             port = Math.max(...Array.from(this.services.keys())) + 1
         }
 
         // 原生方式启动
-        let ps = spawn("node", [this.tw, ".", "--listen", "host=0.0.0.0", `port=${port}`, "anon-username=林汉青"], {
+        let ps = spawn("node", [this.tw, ".", "--listen", "host=0.0.0.0", `port=${port}`].concat(args), {
             cwd: dir
         })
         this.services.set(port, ps)

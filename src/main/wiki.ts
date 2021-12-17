@@ -1,15 +1,15 @@
-import { BrowserWindow, shell } from 'electron'
-import { existsSync } from 'fs-extra'
+import { BrowserWindow, dialog, shell, WebContents } from 'electron'
+import { existsSync, readJsonSync } from 'fs-extra'
 import path from 'path'
 import { config } from './config'
-import { services } from './services'
+import { Service, services } from './services'
 
 /**
  * 直接依赖 services 进行服务管理
  */
 export class Wiki {
     dir: string
-    real_port: number
+    service: Service
     win: BrowserWindow
 
     /**
@@ -22,8 +22,7 @@ export class Wiki {
     constructor(dir: string, window: BrowserWindow | null = null, port: number = 11111) {
         this.dir = dir
         // 始终使用修正后的端口
-        let server = services.launch(dir, port)
-        this.real_port = server.port
+        this.service = services.launch(dir, port, ...this.loadCfg())
 
         if (!window) {
             // 创建浏览器窗口
@@ -38,22 +37,49 @@ export class Wiki {
             this.win.setIcon(icon)
 
         // 服务一旦到达就加载页面，仅加载一次，多了会闪退
-        server.ps.stdout.once("data", () => {
-            this.win.loadURL(`http://localhost:${this.real_port}`)
-                .then(() => this.win.setTitle(this.win.webContents.getTitle()))
-                .catch(() => this.win.reload())
-        })
+        if (this.service.ps.stdout) {
+            this.service.ps.stdout.once("data", () => {
+                this.win.loadURL(`http://localhost:${this.service.port}`)
+                    .then(() => this.win.setTitle(this.win.webContents.getTitle()))
+                    .catch(() => this.win.reload())
+            })
+        }
 
+        this.confWin()
+
+        // 缓存最后一次打开
+        config.lastOpen = dir
+    }
+
+    /**
+     * 读取额外的 listen 参数
+     * 
+     * @returns 额外的 listen 参数
+     */
+    loadCfg(): string[] {
+        let params: string[] = []
+        let file = path.join(this.dir, "launch.json")
+        if (existsSync(file)) {
+            let cfg = readJsonSync(file)
+            for (let [k, v] of Object.entries(cfg)) {
+                params.push(`${k}=${v}`)
+            }
+        }
+        return params
+    }
+
+    /**
+     * 处理 win 操作相关事宜
+     */
+    confWin() {
         // 页面内的链接始终采用默认浏览器打开而不是新建一个窗口
         this.win.webContents.setWindowOpenHandler(details => {
             shell.openExternal(details.url)
-            return {action:'deny'}
+            return { action: 'deny' }
         })
 
         // 关闭窗口之后也关闭服务
-        this.win.once("closed", () => services.stop(this.real_port))
-        // 缓存最后一次打开
-        config.lastOpen = dir
+        this.win.once("closed", () => services.stop(this.service.port))
     }
 
     /**
@@ -61,7 +87,7 @@ export class Wiki {
      * 
      * @returns null
      */
-    static createWindow(title="等待服务启动", nomenu = true) {
+    static createWindow(title = "等待服务启动", nomenu = true) {
         let win = new BrowserWindow({
             width: 1200,
             height: 800,
