@@ -1,4 +1,4 @@
-import { BrowserWindow, dialog, shell, WebContents } from 'electron'
+import { BrowserWindow, shell } from 'electron'
 import { existsSync, readJsonSync } from 'fs-extra'
 import path from 'path'
 import { config } from './config'
@@ -8,6 +8,8 @@ import { Service, services } from './services'
  * 直接依赖 services 进行服务管理
  */
 export class Wiki {
+    static wikis: Set<Wiki> = new Set()
+
     dir: string
     service: Service
     win: BrowserWindow
@@ -48,6 +50,7 @@ export class Wiki {
         this.confWin()
 
         // 缓存最后一次打开
+        Wiki.wikis.add(this)
         config.lastOpen = dir
     }
 
@@ -57,12 +60,16 @@ export class Wiki {
      * @returns 额外的 listen 参数
      */
     loadCfg(): string[] {
-        let params: string[] = []
+        // 总是压缩
+        let params: string[] = ["gzip=yes"]
         let file = path.join(this.dir, "launch.json")
         if (existsSync(file)) {
             let cfg = readJsonSync(file)
             for (let [k, v] of Object.entries(cfg)) {
-                params.push(`${k}=${v}`)
+                const param = `${k}=${v}`
+                // 检查重复项
+                if (!params.includes(param))
+                    params.push(param)
             }
         }
         return params
@@ -79,7 +86,10 @@ export class Wiki {
         })
 
         // 关闭窗口之后也关闭服务
-        this.win.once("closed", () => services.stop(this.service.port))
+        this.win.once("closed", () => {
+            services.stop(this.service.port);
+            Wiki.wikis.delete(this)
+        })
     }
 
     /**

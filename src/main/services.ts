@@ -36,7 +36,7 @@ class TWService {
         }
 
         // 原生方式启动
-        let ps = spawn("node", [this.tw, ".", "--listen", "host=0.0.0.0", `port=${port}`].concat(args), {
+        let ps = spawn("node", [this.tw, ".", "--listen", `port=${port}`].concat(args), {
             cwd: dir
         })
         this.services.set(port, ps)

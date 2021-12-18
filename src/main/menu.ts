@@ -27,6 +27,16 @@ let menu = [
                 async click(_: any, browserWindow: Electron.BrowserWindow, event: Electron.Event) {
                     shell.openExternal(browserWindow.webContents.getURL())
                 }
+            }, {
+                label: '打开所在位置',
+                async click(_: any, browserWindow: Electron.BrowserWindow, event: Electron.Event) {
+                    for (let wiki of Wiki.wikis){
+                        if (wiki.win === browserWindow){
+                            shell.openPath(wiki.dir)
+                            return
+                        }
+                    }
+                }
             },
             { type: 'separator' },
             { role: 'reload' },
