@@ -1,5 +1,6 @@
 import { BrowserWindow, shell } from 'electron'
 import { existsSync, readJsonSync } from 'fs-extra'
+import os from 'os'
 import path from 'path'
 import { config } from './config'
 import { Service, services } from './services'
@@ -33,10 +34,12 @@ export class Wiki {
             this.win = window
         }
 
-        // 获取 wiki 中的自定义 ico
-        let icon = path.join(dir, "tiddlers", "$__favicon.ico")
-        if (existsSync(icon))
-            this.win.setIcon(icon)
+        // 获取 wiki 中的自定义 ico，只有 windows 才能够进行此设置
+        if (os.platform() == "win32") {
+            let icon = path.join(dir, "tiddlers", "$__favicon.ico")
+            if (existsSync(icon))
+                this.win.setIcon(icon)
+        }
 
         // 服务一旦到达就加载页面，仅加载一次，多了会闪退
         if (this.service.ps.stdout) {
@@ -101,7 +104,7 @@ export class Wiki {
         let win = new BrowserWindow({
             width: 1200,
             height: 800,
-            autoHideMenuBar: nomenu,
+            // autoHideMenuBar: nomenu,
             webPreferences: {
                 nodeIntegration: false,
                 preload: path.join(__dirname, "preloads", "preload.js")
