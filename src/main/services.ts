@@ -1,8 +1,6 @@
-import { ChildProcess, spawn, execSync } from 'child_process'
+import { ChildProcess, spawn } from 'child_process'
 import { error } from 'electron-log'
-import { existsSync } from 'fs-extra'
-import os from 'os'
-import path from 'path'
+import { config } from './config'
 
 export interface Service {
     ps: ChildProcess
@@ -15,18 +13,19 @@ class TWService {
 
     constructor() {
         this.services = new Map<number, ChildProcess>()
+        this.tw = config.env.exec
 
         // unix 环境
-        let nodes: string[] | undefined = []
-        // 加载环境
-        if (os.platform() as string == "win32") {
-            nodes = process.env.Path?.split(";").filter(x => x.includes("nodejs"))
-        } else {
-            nodes.push(path.join(execSync("npm get prefix").toString().trim(), "lib"))
-        }
-        if (nodes != undefined && nodes.length != 0) {
-            this.tw = path.join(nodes[0], "node_modules", "tiddlywiki", "tiddlywiki.js")
-        }
+        // let nodes: string[] | undefined = []
+        // // 加载环境
+        // if (config.env.os == "win32") {
+        //     nodes = process.env.Path?.split(";").filter(x => x.includes("nodejs"))
+        // } else {
+        //     nodes.push(path.join(execSync("npm get prefix").toString().trim(), "lib"))
+        // }
+        // if (nodes != undefined && nodes.length != 0) {
+        //     this.tw = path.join(nodes[0], "node_modules", "tiddlywiki", "tiddlywiki.js")
+        // }
     }
 
     /**
@@ -49,13 +48,6 @@ class TWService {
         this.services.set(port, ps)
         ps.on("error", (err) => error(err.message))
         return { ps, port }
-    }
-
-    /**
-     * 必须先执行此方法，否则不能正确启动服务
-     */
-    ok(): boolean {
-        return existsSync(this.tw)
     }
 
     /**
