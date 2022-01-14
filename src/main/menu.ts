@@ -30,8 +30,8 @@ let menu = [
             }, {
                 label: '打开所在位置',
                 async click(_: any, browserWindow: Electron.BrowserWindow, event: Electron.Event) {
-                    for (let wiki of Wiki.wikis){
-                        if (wiki.win === browserWindow){
+                    for (let wiki of Wiki.wikis) {
+                        if (wiki.win === browserWindow) {
                             shell.openPath(wiki.dir)
                             return
                         }
@@ -39,7 +39,12 @@ let menu = [
                 }
             },
             { type: 'separator' },
-            { role: 'reload' },
+            {
+                label: '开发者工具',
+                async click(_: any, browserWindow: Electron.BrowserWindow, event: Electron.Event) {
+                    browserWindow.webContents.openDevTools()
+                }
+            }, { role: 'reload' },
         ]
     }
 ]
