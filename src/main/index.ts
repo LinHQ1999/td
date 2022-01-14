@@ -23,11 +23,11 @@ if (app.requestSingleInstanceLock()) {
                 .then(selected => {
                     let paths = selected.filePaths
                     if (paths.length != 0) {
-                        new Wiki(paths[0], win)
+                        Wiki.wikis.add(new Wiki(paths[0], win))
                     }
                 })
         } else {
-            new Wiki(lastOpen)
+            Wiki.wikis.add(new Wiki(lastOpen))
         }
     }).catch(reason => {
         err(reason)

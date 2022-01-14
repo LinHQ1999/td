@@ -10,7 +10,17 @@ let menu = [
                 async click(_: any, browserWindow: Electron.BrowserWindow, event: Electron.Event) {
                     let selected = await dialog.showOpenDialog(browserWindow, { properties: ["openDirectory"] })
                     if (selected.filePaths.length != 0) {
-                        new Wiki(selected.filePaths[0])
+                        Wiki.wikis.add(new Wiki(selected.filePaths[0]))
+                    }
+                }
+            },
+            {
+                label: '重载服务',
+                async click(_: any, browserWindow: Electron.BrowserWindow, event: Electron.Event) {
+                    for (let wiki of Wiki.wikis) {
+                        if (wiki.win === browserWindow) {
+                            wiki.restart()
+                        }
                     }
                 }
             },

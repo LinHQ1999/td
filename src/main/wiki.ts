@@ -56,8 +56,23 @@ export class Wiki {
         this.confWin()
 
         // 缓存最后一次打开
-        Wiki.wikis.add(this)
         config.lastOpen = dir
+    }
+
+    /**
+     * 重启服务
+     */
+    restart() {
+        // 停止服务，但不要移除窗口
+        services.stop(this.service.port)
+        // 重启
+        this.win.setTitle("正在重载服务……")
+        this.service = services.launch(this.dir, this.service.port, ...this.loadCfg())
+        // 并刷新
+        this.service.ps.stdout?.once("data", _ => {
+            this.win.reload()
+            this.win.setTitle(this.win.webContents.getTitle())
+        })
     }
 
     /**
@@ -91,7 +106,7 @@ export class Wiki {
             return { action: 'deny' }
         })
 
-        // 关闭窗口之后也关闭服务
+        // 关闭窗口之后也关闭服务并移除窗口
         this.win.once("closed", () => {
             services.stop(this.service.port);
             Wiki.wikis.delete(this)
