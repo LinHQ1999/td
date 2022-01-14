@@ -1,5 +1,6 @@
 import { app, BrowserWindow, dialog, Notification } from 'electron'
 import { error as err, warn } from 'electron-log'
+import { existsSync } from 'original-fs'
 import { config } from './config'
 import { initMenu } from './menu'
 import { services } from './services'
@@ -10,7 +11,7 @@ initMenu();
 if (app.requestSingleInstanceLock()) {
     app.whenReady().then(() => {
         let lastOpen = config.lastOpen
-        if (!services.ok()) {
+        if (!existsSync(config.env.exec)) {
             new Notification({ title: "环境错误", body: "执行 npm i -g tiddlywki" }).show()
             err("宿主机不具备对应环境")
             app.quit()
