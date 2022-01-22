@@ -16,8 +16,8 @@ if (app.requestSingleInstanceLock()) {
             err("宿主机不具备对应环境")
             app.quit()
         }
-        // 检查是否是初始状态
-        if (lastOpen == undefined) {
+        // 检查是否是初始状态或目录已变动
+        if (lastOpen == undefined || !existsSync(lastOpen)) {
             let win = Wiki.createWindow()
             dialog.showOpenDialog(win, { properties: ["openDirectory"] })
                 .then(selected => {
