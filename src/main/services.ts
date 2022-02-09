@@ -1,31 +1,19 @@
-import { ChildProcess, spawn } from 'child_process'
 import { error } from 'electron-log'
+import { Worker } from 'worker_threads'
 import { config } from './config'
 
 export interface Service {
-    ps: ChildProcess
+    worker: Worker
     port: number
 }
 
 class TWService {
     tw: string = ""
-    services: Map<number, ChildProcess>
+    services: Map<number, Worker>
 
     constructor() {
-        this.services = new Map<number, ChildProcess>()
+        this.services = new Map<number, Worker>()
         this.tw = config.env.exec
-
-        // unix 环境
-        // let nodes: string[] | undefined = []
-        // // 加载环境
-        // if (config.env.os == "win32") {
-        //     nodes = process.env.Path?.split(";").filter(x => x.includes("nodejs"))
-        // } else {
-        //     nodes.push(path.join(execSync("npm get prefix").toString().trim(), "lib"))
-        // }
-        // if (nodes != undefined && nodes.length != 0) {
-        //     this.tw = path.join(nodes[0], "node_modules", "tiddlywiki", "tiddlywiki.js")
-        // }
     }
 
     /**
@@ -41,13 +29,13 @@ class TWService {
             port = Math.max(...Array.from(this.services.keys())) + 1
         }
 
-        // 原生方式启动
-        let ps = spawn("node", [this.tw, ".", "--listen", `port=${port}`].concat(args), {
-            cwd: dir
-        })
-        this.services.set(port, ps)
-        ps.on("error", (err) => error(err.message))
-        return { ps, port }
+        let worker = new Worker(this.tw,
+            {
+                argv: [dir, "--listen", `port=${port}`].concat(args)
+            })
+        this.services.set(port, worker)
+        worker.on("error", (err) => error(err.message))
+        return { worker, port }
     }
 
     /**
@@ -56,9 +44,9 @@ class TWService {
      * @param port 端口号
      */
     stop(port: number) {
-        let ps = this.services.get(port)
-        if (ps != null) {
-            ps.kill()
+        let worker = this.services.get(port)
+        if (worker != null) {
+            worker.terminate()
             // 同时从表中移除
             this.services.delete(port)
         }

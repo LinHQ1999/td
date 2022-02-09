@@ -45,8 +45,8 @@ export class Wiki {
         }
 
         // 服务一旦到达就加载页面，仅加载一次，多了会闪退
-        if (this.service.ps.stdout) {
-            this.service.ps.stdout.once("data", () => {
+        if (this.service.worker.stdout) {
+            this.service.worker.stdout.once("data", () => {
                 this.win.loadURL(`http://localhost:${this.service.port}`)
                     .then(() => this.win.setTitle(this.win.webContents.getTitle()))
                     .catch(() => this.win.reload())
@@ -69,7 +69,7 @@ export class Wiki {
         this.win.setTitle("正在重载服务……")
         this.service = services.launch(this.dir, this.service.port, ...this.loadCfg())
         // 并刷新
-        this.service.ps.stdout?.once("data", _ => {
+        this.service.worker.stdout?.once("data", _ => {
             this.win.reload()
             this.win.setTitle(this.win.webContents.getTitle())
         })
