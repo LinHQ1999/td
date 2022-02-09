@@ -44,11 +44,16 @@ export class Wiki {
             this.win.setAutoHideMenuBar(false)
         }
 
+        // 防止视觉闪烁
+        this.win.once('ready-to-show', () => this.win.show())
+
         // 服务一旦到达就加载页面，仅加载一次，多了会闪退
         if (this.service.worker.stdout) {
             this.service.worker.stdout.once("data", () => {
                 this.win.loadURL(`http://localhost:${this.service.port}`)
-                    .then(() => this.win.setTitle(this.win.webContents.getTitle()))
+                    .then(() => {
+                        this.win.setTitle(this.win.webContents.getTitle())
+                    })
                     .catch(() => this.win.reload())
             })
         }
@@ -119,16 +124,15 @@ export class Wiki {
      * @returns null
      */
     static createWindow(title = "等待服务启动", nomenu = true) {
-        let win = new BrowserWindow({
+        return new BrowserWindow({
             width: 1200,
             height: 800,
             autoHideMenuBar: nomenu,
+            title: title,
+            show: false,
             webPreferences: {
-                nodeIntegration: false,
                 preload: path.join(__dirname, "preloads", "preload.js")
             }
         })
-        win.setTitle(title)
-        return win
     }
 }
