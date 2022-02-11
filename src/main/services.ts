@@ -2,6 +2,7 @@ import { error } from 'electron-log'
 import { Worker } from 'worker_threads'
 import { config } from './config'
 import { join } from 'path'
+import isDev from 'electron-is-dev'
 
 export interface Service {
     worker: Worker
@@ -43,7 +44,8 @@ class TWService {
      * @returns none
      */
     launchFile(dir: string, port: number) {
-        let worker = new Worker(join(__dirname, "widdler.js"), {
+        let workerjs = isDev ? join(__dirname, "workers","widdler.js") : join(process.resourcesPath, "app.asar.unpacked", "workers", "widdler.js")
+        let worker = new Worker(workerjs, {
             workerData: ["-wikis", dir, "-auth", false, "-http", `0.0.0.0:${port}`]
         })
         this.services.set(port, worker)

@@ -67,7 +67,9 @@ export class Wiki {
         }
 
         // 防止视觉闪烁
-        this.win.once('ready-to-show', this.win.show)
+        // this.win.once('ready-to-show', this.win.show)
+        // this.win.webContents.openDevTools()
+        this.win.show()
 
         this.loadWin()
         this.confWin()
