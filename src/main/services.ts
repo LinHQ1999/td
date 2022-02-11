@@ -1,6 +1,7 @@
 import { error } from 'electron-log'
 import { Worker } from 'worker_threads'
 import { config } from './config'
+import { join } from 'path'
 
 export interface Service {
     worker: Worker
@@ -13,7 +14,7 @@ class TWService {
 
     constructor() {
         this.services = new Map<number, Worker>()
-        this.tw = config.env.exec
+        this.tw = config.env.tw
     }
 
     /**
@@ -24,10 +25,7 @@ class TWService {
      * @returns 
      */
     launch(dir: string, port: number, ...args: string[]): Service {
-        // 先判断在不在表中很有必要，否则端口可能会取到负数
-        if (this.services.has(port)) {
-            port = Math.max(...Array.from(this.services.keys())) + 1
-        }
+        port = this.schport(port)
 
         let worker = new Worker(this.tw,
             {
@@ -36,6 +34,34 @@ class TWService {
         this.services.set(port, worker)
         worker.on("error", (err) => error(err.message))
         return { worker, port }
+    }
+
+    /**
+     * (实验性) 使用 widdler 启动单文件 wiki
+     * @param dir wiki 目录
+     * @param port 预期端口号
+     * @returns none
+     */
+    launchFile(dir: string, port: number) {
+        let worker = new Worker(join(__dirname, "widdler.js"), {
+            workerData: ["-wikis", dir, "-auth", false, "-http", `0.0.0.0:${port}`]
+        })
+        this.services.set(port, worker)
+        worker.on("error", (err) => error(err.message))
+        return { worker, port }
+    }
+
+    /**
+     * 解决端口冲突
+     * @param port 预期端口号
+     * @returns 解决冲突后的端口号
+     */
+    schport(port: number): number {
+        // 先判断在不在表中很有必要，否则端口可能会取到负数
+        if (this.services.has(port)) {
+            port = Math.max(...Array.from(this.services.keys())) + 1
+        }
+        return port
     }
 
     /**

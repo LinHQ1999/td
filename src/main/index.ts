@@ -11,7 +11,7 @@ initMenu();
 if (app.requestSingleInstanceLock()) {
     app.whenReady().then(() => {
         let lastOpen = config.lastOpen
-        if (!existsSync(config.env.exec)) {
+        if (!existsSync(config.env.tw)) {
             new Notification({ title: "环境错误", body: "执行 npm i -g tiddlywki" }).show()
             err("宿主机不具备对应环境")
             app.quit()

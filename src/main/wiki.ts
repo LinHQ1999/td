@@ -1,8 +1,9 @@
 import { BrowserWindow, shell } from 'electron'
-import { existsSync, readJsonSync } from 'fs-extra'
+import { existsSync, readdirSync, readJsonSync } from 'fs-extra'
 import path from 'path'
 import { config } from './config'
 import { Service, services } from './services'
+import { error } from 'electron-log'
 
 /**
  * 直接依赖 services 进行服务管理
@@ -11,7 +12,7 @@ export class Wiki {
     static wikis: Set<Wiki> = new Set()
 
     dir: string
-    service: Service
+    service: Service | undefined
     win: BrowserWindow
 
     /**
@@ -23,14 +24,27 @@ export class Wiki {
      */
     constructor(dir: string, window: BrowserWindow | null = null, port: number = 11111) {
         this.dir = dir
-        // 始终使用修正后的端口
-        this.service = services.launch(dir, port, ...this.loadCfg())
+        // 防止误操作，始终绑定本身对象
+        this.confWin.bind(this)
 
         if (!window) {
             // 创建浏览器窗口
             this.win = Wiki.createWindow()
         } else {
             this.win = window
+        }
+
+        // 始终使用修正后的端口
+        if (this.isSingleFile()) {
+            if (config.env.wd) {
+                this.service = services.launchFile(dir, port)
+            } else {
+                error("需要安装 widdler，系统当前不具备此环境")
+                this.win.close()
+                return
+            }
+        } else {
+            this.service = services.launch(dir, port, ...this.loadCfg())
         }
 
         // 获取 wiki 中的自定义 ico，只有 windows 才能够进行此设置
@@ -45,19 +59,9 @@ export class Wiki {
         }
 
         // 防止视觉闪烁
-        this.win.once('ready-to-show', () => this.win.show())
+        this.win.once('ready-to-show', this.win.show)
 
-        // 服务一旦到达就加载页面，仅加载一次，多了会闪退
-        if (this.service.worker.stdout) {
-            this.service.worker.stdout.once("data", () => {
-                this.win.loadURL(`http://localhost:${this.service.port}`)
-                    .then(() => {
-                        this.win.setTitle(this.win.webContents.getTitle())
-                    })
-                    .catch(() => this.win.reload())
-            })
-        }
-
+        this.loadWin()
         this.confWin()
 
         // 缓存最后一次打开
@@ -69,15 +73,17 @@ export class Wiki {
      */
     restart() {
         // 停止服务，但不要移除窗口
-        services.stop(this.service.port)
-        // 重启
-        this.win.setTitle("正在重载服务……")
-        this.service = services.launch(this.dir, this.service.port, ...this.loadCfg())
-        // 并刷新
-        this.service.worker.stdout?.once("data", _ => {
-            this.win.reload()
-            this.win.setTitle(this.win.webContents.getTitle())
-        })
+        if (this.service) {
+            services.stop(this.service.port)
+            // 重启
+            this.win.setTitle("正在重载服务……")
+            this.service = services.launch(this.dir, this.service.port, ...this.loadCfg())
+            // 并刷新
+            this.service.worker.stdout?.once("data", _ => {
+                this.win.reload()
+                this.win.setTitle(this.win.webContents.getTitle())
+            })
+        }
     }
 
     /**
@@ -113,9 +119,37 @@ export class Wiki {
 
         // 关闭窗口之后也关闭服务并移除窗口
         this.win.once("closed", () => {
-            services.stop(this.service.port);
+            if (this.service) {
+                services.stop(this.service.port);
+            }
             Wiki.wikis.delete(this)
         })
+    }
+
+    /**
+     * 加载页面资源
+     */
+    loadWin() {
+        // 服务一旦到达就加载页面，仅加载一次，多了会闪退
+        if (this.service && this.service.worker.stdout) {
+            this.service.worker.stdout.once("data", async () => {
+                try {
+                    await this.win.loadURL(`http://localhost:${this.service?.port}`)
+                    this.win.setTitle(this.win.webContents.getTitle())
+                } catch (_) {
+                    this.win.reload()
+                }
+            })
+        }
+    }
+
+    isSingleFile(): boolean {
+        let files = readdirSync(this.dir)
+        for (let file of files) {
+            if (file.includes(".html"))
+                return true
+        }
+        return false
     }
 
     /**
@@ -123,16 +157,16 @@ export class Wiki {
      * 
      * @returns null
      */
-    static createWindow(title = "等待服务启动", nomenu = true) {
+    static createWindow(title = "等待服务启动", show = false, nomenu = true) {
         return new BrowserWindow({
             width: 1200,
             height: 800,
             autoHideMenuBar: nomenu,
             title: title,
-            show: false,
-            webPreferences: {
-                preload: path.join(__dirname, "preloads", "preload.js")
-            }
+            show: show,
+            // webPreferences: {
+            //     preload: path.join(__dirname, "preloads", "preload.js")
+            // }
         })
     }
 }
