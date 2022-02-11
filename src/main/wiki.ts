@@ -1,9 +1,9 @@
-import { BrowserWindow, shell } from 'electron'
+import { BrowserWindow, Notification, shell } from 'electron'
+import { error } from 'electron-log'
 import { existsSync, readdirSync, readJsonSync } from 'fs-extra'
 import path from 'path'
 import { config } from './config'
 import { Service, services } from './services'
-import { error } from 'electron-log'
 
 /**
  * 直接依赖 services 进行服务管理
@@ -14,6 +14,8 @@ export class Wiki {
     dir: string
     service: Service | undefined
     win: BrowserWindow
+    // 是否单文件版
+    single: boolean
 
     /**
      * 启动新 wiki 并打开新窗口
@@ -24,6 +26,7 @@ export class Wiki {
      */
     constructor(dir: string, window: BrowserWindow | null = null, port: number = 11111) {
         this.dir = dir
+        this.single = this.checkSingleFile()
         // 防止误操作，始终绑定本身对象
         this.confWin.bind(this)
 
@@ -34,16 +37,21 @@ export class Wiki {
             this.win = window
         }
 
-        // 始终使用修正后的端口
-        if (this.isSingleFile()) {
+        if (this.single) {
+            // 环境检查
             if (config.env.wd) {
                 this.service = services.launchFile(dir, port)
             } else {
-                error("需要安装 widdler，系统当前不具备此环境")
-                this.win.close()
+                let note = new Notification({
+                    title: "需要安装 widdler，系统当前不具备此环境",
+                    body: "执行 go install suah.dev/widdler@latest 以进行安装"
+                })
+                note.show()
+                error(note.title, note.body)
                 return
             }
         } else {
+            // 启动 node 版
             this.service = services.launch(dir, port, ...this.loadCfg())
         }
 
@@ -73,7 +81,7 @@ export class Wiki {
      */
     restart() {
         // 停止服务，但不要移除窗口
-        if (this.service) {
+        if (this.service && !this.single) {
             services.stop(this.service.port)
             // 重启
             this.win.setTitle("正在重载服务……")
@@ -83,6 +91,8 @@ export class Wiki {
                 this.win.reload()
                 this.win.setTitle(this.win.webContents.getTitle())
             })
+        } else {
+            new Notification({ title: "单文件版不支持重载服务！" }).show()
         }
     }
 
@@ -143,11 +153,14 @@ export class Wiki {
         }
     }
 
-    isSingleFile(): boolean {
+    /**
+     * 判断当前 dir 是否是单文件版的
+     * @returns 
+     */
+    checkSingleFile() {
         let files = readdirSync(this.dir)
         for (let file of files) {
-            if (file.includes(".html"))
-                return true
+            if (file.includes(".html")) return true
         }
         return false
     }
