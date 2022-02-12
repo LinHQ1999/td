@@ -2,3 +2,5 @@ node_modules
 td*/
 dist/
 out/
+*.log
+*.lock

@@ -3,7 +3,7 @@ import { error as err, warn } from 'electron-log'
 import { existsSync } from 'original-fs'
 import { config } from './config'
 import { initMenu } from './menu'
-import { services } from './services'
+import { TWService } from './services'
 import { Wiki } from './wiki'
 
 initMenu();
@@ -47,7 +47,7 @@ app.on('activate', function () {
 
 app.on('window-all-closed', function () {
     if (process.platform !== 'darwin') {
-        services.stopAll()
+        TWService.stopAll()
         app.quit()
     }
 })

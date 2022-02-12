@@ -3,7 +3,7 @@ import { error } from 'electron-log'
 import { existsSync, readdirSync, readJsonSync } from 'fs-extra'
 import path from 'path'
 import { config } from './config'
-import { Service, services } from './services'
+import { Service, TWService } from './services'
 
 /**
  * 直接依赖 services 进行服务管理
@@ -40,7 +40,7 @@ export class Wiki {
         if (this.single) {
             // 环境检查
             if (config.env.wd) {
-                this.service = services.launchFile(dir, port)
+                this.service = TWService.launchFile(dir, port)
             } else {
                 let note = new Notification({
                     title: "需要安装 widdler，系统当前不具备此环境",
@@ -52,7 +52,7 @@ export class Wiki {
             }
         } else {
             // 启动 node 版
-            this.service = services.launch(dir, port, ...this.loadCfg())
+            this.service =  TWService.launch(dir, port, ...this.loadCfg())
         }
 
         // 获取 wiki 中的自定义 ico，只有 windows 才能够进行此设置
@@ -67,9 +67,7 @@ export class Wiki {
         }
 
         // 防止视觉闪烁
-        // this.win.once('ready-to-show', this.win.show)
-        // this.win.webContents.openDevTools()
-        this.win.show()
+        this.win.once('ready-to-show', this.win.show)
 
         this.loadWin()
         this.confWin()
@@ -84,10 +82,10 @@ export class Wiki {
     restart() {
         // 停止服务，但不要移除窗口
         if (this.service && !this.single) {
-            services.stop(this.service.port)
+            TWService.stop(this.service.port)
             // 重启
             this.win.setTitle("正在重载服务……")
-            this.service = services.launch(this.dir, this.service.port, ...this.loadCfg())
+            this.service = TWService.launch(this.dir, this.service.port, ...this.loadCfg())
             // 并刷新
             this.service.worker.stdout?.once("data", _ => {
                 this.win.reload()
@@ -132,7 +130,7 @@ export class Wiki {
         // 关闭窗口之后也关闭服务并移除窗口
         this.win.once("closed", () => {
             if (this.service) {
-                services.stop(this.service.port);
+                TWService.stop(this.service.port);
             }
             Wiki.wikis.delete(this)
         })

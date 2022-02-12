@@ -44,6 +44,7 @@ class Config {
         }
 
         info(this.env)
+        info(this.lastOpen)
     }
 
     set lastOpen(dir: string) {
