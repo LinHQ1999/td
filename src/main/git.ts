@@ -8,7 +8,8 @@ import { info, warn } from 'electron-log'
 export function CheckUpdate(dir: string): void {
     try {
         if (exec("git status", { cwd: dir }).toString().split("\n")[0] != "") {
-            exec(`git add . && git commit -a -m "${new Date().toLocaleString()}"`, { cwd: dir })
+            exec(`git add . && git commit -a -m "${new Date().toLocaleString()}"`, { cwd: dir, timeout: 5000 })
+            info("自动提交成功!")
         } else {
             info("无变更")
         }
