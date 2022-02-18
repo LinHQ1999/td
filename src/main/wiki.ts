@@ -3,6 +3,7 @@ import { error } from 'electron-log'
 import { existsSync, readdirSync, readJsonSync } from 'fs-extra'
 import path from 'path'
 import { config } from './config'
+import { CheckUpdate } from './git'
 import { Service, TWService } from './services'
 
 /**
@@ -52,7 +53,7 @@ export class Wiki {
             }
         } else {
             // 启动 node 版
-            this.service =  TWService.launch(dir, port, ...this.loadCfg())
+            this.service = TWService.launch(dir, port, ...this.loadCfg())
         }
 
         // 获取 wiki 中的自定义 ico，只有 windows 才能够进行此设置
@@ -131,6 +132,7 @@ export class Wiki {
         this.win.once("closed", () => {
             if (this.service) {
                 TWService.stop(this.service.port);
+                CheckUpdate(this.dir)
             }
             Wiki.wikis.delete(this)
         })

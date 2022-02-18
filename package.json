@@ -8,7 +8,7 @@
     "pack": "tsc && electron-builder --dir",
     "dist": "tsc && electron-builder",
     "start": "tsc && electron .",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "postinstall": "install-app-deps"
   },
   "keywords": [],
   "author": "LinHQ <Hanqing_Lin1999@outlook.com>",
@@ -16,6 +16,7 @@
   "devDependencies": {
     "@types/electron": "^1.6.10",
     "@types/fs-extra": "^9.0.13",
+    "@types/nodegit": "^0.27.10",
     "electron": "^17.0.0",
     "electron-builder": "^22.14.13",
     "typescript": "^4.5.5"
@@ -24,11 +25,15 @@
     "electron-is-dev": "^2.0.0",
     "electron-log": "^4.4.6",
     "electron-store": "^8.0.1",
-    "fs-extra": "^10.0.0"
+    "fs-extra": "^10.0.0",
+    "nodegit": "^0.28.0-alpha.11"
   },
   "build": {
     "appId": "cn.linhq.td",
     "productName": "td",
+    "files": [
+      "out"
+    ],
     "extraResources": {
       "from": "out/workers/widdler.js",
       "to": "app.asar.unpacked/workers/widdler.js"
@@ -37,9 +42,6 @@
       "target": [
         {
           "target": "dir"
-        },
-        {
-          "target": "7z"
         }
       ]
     },
