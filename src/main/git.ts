@@ -1,5 +1,6 @@
 import { execSync as exec } from 'child_process'
 import { info, warn } from 'electron-log'
+import { existsSync } from 'original-fs'
 
 /**
  * 检查 git 状态并提交
@@ -7,7 +8,7 @@ import { info, warn } from 'electron-log'
  */
 export function CheckUpdate(dir: string): void {
     try {
-        if (exec("git status", { cwd: dir }).toString().split("\n")[0] != "") {
+        if (existsSync(".git") && exec("git status", { cwd: dir }).toString().split("\n")[0] != "") {
             exec(`git add . && git commit -a -m "${new Date().toLocaleString()}"`, { cwd: dir, timeout: 5000 })
             info("自动提交成功!")
         } else {
