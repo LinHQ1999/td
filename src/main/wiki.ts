@@ -11,6 +11,8 @@ import { Service, TWService } from './services'
  */
 export class Wiki {
     static wikis: Set<Wiki> = new Set()
+    // 窗口聚焦则切换
+    static cwd: Wiki | null = null
 
     dir: string
     service: Service | undefined
@@ -136,6 +138,9 @@ export class Wiki {
             }
             Wiki.wikis.delete(this)
         })
+
+        // 实时更新正在工作的 wiki
+        this.win.on("focus", () => Wiki.cwd = this)
     }
 
     /**
@@ -179,9 +184,9 @@ export class Wiki {
             autoHideMenuBar: nomenu,
             title: title,
             show: show,
-            // webPreferences: {
-            //     preload: path.join(__dirname, "preloads", "preload.js")
-            // }
+            webPreferences: {
+                preload: path.join(__dirname, "preloads", "preload.js")
+            }
         })
     }
 }
