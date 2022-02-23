@@ -88,7 +88,9 @@ ipcMain.handle("delete", (_, path: string) => {
         }
         let fullpath = join(cwd, path)
         if (existsSync(fullpath)) {
-            moveSync(fullpath, join(trash, basename(fullpath)))
+            moveSync(fullpath, join(trash, basename(fullpath)), {
+                overwrite: true
+            })
             // removeSync(fullpath)
         }
     }
