@@ -1,12 +1,12 @@
+import { ChildProcess, spawn } from 'child_process'
 import { error } from 'electron-log'
 import { Worker } from 'worker_threads'
 import { config } from './config'
-import { join } from 'path'
-import isDev from 'electron-is-dev'
 
 interface Service {
-    worker: Worker
+    worker: Worker | ChildProcess
     port: number
+    type: LaunchType
 }
 
 enum LaunchType {
@@ -14,10 +14,10 @@ enum LaunchType {
     "html"
 }
 
-class TWService {
+class TWServices {
     static tw: string = config.env.tw
     static wd: string | undefined = config.env.wd
-    static services: Map<number, Worker> = new Map<number, Worker>()
+    static services = new Set<Service>()
     /**
      * 启动 nodejs 版 wiki, 考虑结合 enum 实现
      * @param {string} dir wiki 所在目录
@@ -26,15 +26,17 @@ class TWService {
      * @returns 
      */
     static launch(dir: string, port: number, ...args: string[]): Service {
-        port = TWService.schport(port)
+        port = TWServices.schport(port)
 
-        let worker = new Worker(TWService.tw,
+        let worker = new Worker(TWServices.tw,
             {
                 argv: [dir, "--listen", `port=${port}`].concat(args)
             })
-        TWService.services.set(port, worker)
         worker.on("error", (err) => error(err.message))
-        return { worker, port }
+
+        let instance = { worker, port, type: LaunchType.node }
+        TWServices.services.add(instance)
+        return instance
     }
 
     /**
@@ -43,16 +45,16 @@ class TWService {
      * @param port 预期端口号
      * @returns none
      */
-    static launchFile(dir: string, port: number) {
-        let workerjs = isDev ? join(__dirname, "workers","widdler.js") : join(process.resourcesPath, "app.asar.unpacked", "workers", "widdler.js")
+    static launchFile(dir: string, port: number): Service {
+        // let workerjs = isDev ? join(__dirname, "workers", "widdler.js") : join(process.resourcesPath, "app.asar.unpacked", "workers", "widdler.js")
         // 重分配端口
-        port = TWService.schport(port)
-        let worker = new Worker(workerjs, {
-            workerData: ["-wikis", dir, "-auth", false, "-http", `0.0.0.0:${TWService.schport(port)}`]
-        })
-        TWService.services.set(port, worker)
-        worker.on("error", (err) => error(err.message))
-        return { worker, port }
+        port = TWServices.schport(port)
+        let ps = spawn("widdler", ["-wikis", dir, "-auth", "false", "-http", `0.0.0.0:${port}`])
+        ps.on("error", error)
+
+        let instance = { worker: ps, port: port, type: LaunchType.html }
+        TWServices.services.add(instance)
+        return instance
     }
 
     /**
@@ -62,31 +64,37 @@ class TWService {
      */
     static schport(port: number): number {
         // 先判断在不在表中很有必要，否则端口可能会取到负数
-        if (TWService.services.has(port)) {
-            port = Math.max(...Array.from(TWService.services.keys())) + 1
+        let actual = port
+        for (let service of TWServices.services) {
+            if (service.port == actual) {
+                actual = service.port + 1
+            }
         }
-        return port
+        return actual
     }
 
     /**
      * 根据端口号停止服务进程
      * 
-     * @param port 端口号
+     * @param service 返回的服务
      */
-    static stop(port: number) {
-        let worker = TWService.services.get(port)
-        if (worker != null) {
-            worker.terminate()
-            // 同时从表中移除
-            TWService.services.delete(port)
+    static stop(service: Service) {
+        if (service.type == LaunchType.html){
+            let ps = service.worker as ChildProcess
+            ps.kill()
+        } else {
+            let wk = service.worker as Worker
+            wk.terminate()
         }
+        TWServices.services.delete(service)
     }
 
     static stopAll() {
-        for (let [port, _] of TWService.services) {
-            TWService.stop(port)
+        for (let service of TWServices.services) {
+            TWServices.stop(service)
         }
     }
 }
 
-export {LaunchType, Service, TWService}
+export { LaunchType, Service, TWServices as TWService }
+

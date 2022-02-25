@@ -4,7 +4,7 @@ import { existsSync, readdirSync, readJsonSync } from 'fs-extra'
 import path from 'path'
 import { config } from './config'
 import { CheckUpdate } from './git'
-import { Service, TWService } from './services'
+import { LaunchType, Service, TWService } from './services'
 
 /**
  * 直接依赖 services 进行服务管理
@@ -70,7 +70,8 @@ export class Wiki {
         }
 
         // 防止视觉闪烁
-        this.win.once('ready-to-show', this.win.show)
+        // this.win.once('ready-to-show', this.win.show)
+        this.win.show()
 
         this.loadWin()
         this.confWin()
@@ -85,7 +86,7 @@ export class Wiki {
     restart() {
         // 停止服务，但不要移除窗口
         if (this.service && !this.single) {
-            TWService.stop(this.service.port)
+            TWService.stop(this.service)
             // 重启
             this.win.setTitle("正在重载服务……")
             this.service = TWService.launch(this.dir, this.service.port, ...this.loadCfg())
@@ -133,7 +134,7 @@ export class Wiki {
         // 关闭窗口之后也关闭服务并移除窗口
         this.win.once("closed", () => {
             if (this.service) {
-                TWService.stop(this.service.port);
+                TWService.stop(this.service);
                 CheckUpdate(this.dir)
             }
             Wiki.wikis.delete(this)
@@ -149,14 +150,26 @@ export class Wiki {
     loadWin() {
         // 服务一旦到达就加载页面，仅加载一次，多了会闪退
         if (this.service && this.service.worker.stdout) {
-            this.service.worker.stdout.once("data", async () => {
-                try {
-                    await this.win.loadURL(`http://localhost:${this.service?.port}`)
-                    this.win.setTitle(this.win.webContents.getTitle())
-                } catch (_) {
-                    this.win.reload()
-                }
-            })
+            // 情况不同，启动条件不同
+            if (this.service.type == LaunchType.html) {
+                this.service.worker.once("spawn", async () => {
+                    try {
+                        await this.win.loadURL(`http://localhost:${this.service?.port}`)
+                        this.win.setTitle(this.win.webContents.getTitle())
+                    } catch (_) {
+                        this.win.reload()
+                    }
+                })
+            } else {
+                this.service.worker.stdout.once("data", async () => {
+                    try {
+                        await this.win.loadURL(`http://localhost:${this.service?.port}`)
+                        this.win.setTitle(this.win.webContents.getTitle())
+                    } catch (_) {
+                        this.win.reload()
+                    }
+                })
+            }
         }
     }
 

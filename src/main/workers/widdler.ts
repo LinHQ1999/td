@@ -1,5 +1,5 @@
 import { spawn } from 'child_process'
-import { isMainThread, workerData } from 'worker_threads'
+import { isMainThread, workerData, parentPort } from 'worker_threads'
 import {info, error} from 'electron-log'
 
 /**
