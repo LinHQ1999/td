@@ -13,7 +13,7 @@ initMenu();
 
 if (app.requestSingleInstanceLock()) {
     app.whenReady().then(() => {
-        let lastOpen = config.lastOpen
+        let lastOpen = config.Opened
         if (!existsSync(config.env.tw)) {
             new Notification({ title: "环境错误", body: "执行 npm i -g tiddlywki" }).show()
             err("宿主机不具备对应环境")
@@ -26,7 +26,10 @@ if (app.requestSingleInstanceLock()) {
                 .then(selected => {
                     let paths = selected.filePaths
                     if (paths.length != 0) {
-                        Wiki.wikis.add(new Wiki(paths[0], win))
+                        let first = new Wiki(paths[0], win)
+                        Wiki.wikis.add(first)
+                        // 把第一次打开的作为默认值
+                        config.Opened = first.dir
                     }
                 })
         } else {

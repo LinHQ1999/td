@@ -1,7 +1,10 @@
 import { dialog, Menu, shell } from 'electron'
+import { config } from './config'
 import { Wiki } from './wiki'
 
-let menu = [
+type MenuTemplate = typeof MenuTmpl
+
+export let MenuTmpl = [
     {
         label: '文件',
         submenu: [
@@ -20,6 +23,16 @@ let menu = [
                     for (let wiki of Wiki.wikis) {
                         if (wiki.win === browserWindow) {
                             wiki.restart()
+                        }
+                    }
+                }
+            },
+            {
+                label: '设为默认',
+                async click(_: any, browserWindow: Electron.BrowserWindow, event: Electron.Event) {
+                    for (let wiki of Wiki.wikis) {
+                        if (wiki.win === browserWindow) {
+                            config.Opened = wiki.dir
                         }
                     }
                 }
@@ -60,5 +73,5 @@ let menu = [
 ]
 
 export function initMenu() {
-    Menu.setApplicationMenu(Menu.buildFromTemplate(menu as any))
+    Menu.setApplicationMenu(Menu.buildFromTemplate(<any>MenuTmpl))
 }

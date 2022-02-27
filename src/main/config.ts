@@ -44,14 +44,14 @@ class Config {
         }
 
         info(this.env)
-        info(this.lastOpen)
+        info(this.Opened)
     }
 
-    set lastOpen(dir: string) {
+    set Opened(dir: string) {
         this.store.set("last", dir)
     }
 
-    get lastOpen(): string {
+    get Opened(): string {
         return this.store.get("last") as string
     }
 }

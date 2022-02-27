@@ -75,9 +75,6 @@ export class Wiki {
 
         this.loadWin()
         this.confWin()
-
-        // 缓存最后一次打开
-        config.lastOpen = dir
     }
 
     /**
