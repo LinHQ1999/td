@@ -13,6 +13,7 @@ export interface FileInfo {
 
 export const api = {
   "import": (info: FileInfo) => ipcRenderer.invoke("import", info),
+  "download": (file:ArrayBuffer, fname:string) => ipcRenderer.invoke("download", file, fname),
   "delete": (canonical: string) => ipcRenderer.invoke("delete", canonical)
 }
 contextBridge.exposeInMainWorld("TD", api)

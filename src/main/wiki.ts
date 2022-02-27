@@ -1,9 +1,10 @@
 import { BrowserWindow, Notification, shell } from 'electron'
+import electronIsDev from 'electron-is-dev'
 import { error } from 'electron-log'
 import { existsSync, readdirSync, readJsonSync } from 'fs-extra'
 import path from 'path'
 import { config } from './config'
-import { CheckUpdate } from './git'
+import { CheckCommit } from './git'
 import { LaunchType, Service, TWService } from './services'
 
 /**
@@ -75,6 +76,8 @@ export class Wiki {
 
         this.loadWin()
         this.confWin()
+
+        if (electronIsDev) this.win.webContents.openDevTools()
     }
 
     /**
@@ -132,7 +135,6 @@ export class Wiki {
         this.win.once("closed", () => {
             if (this.service) {
                 TWService.stop(this.service);
-                CheckUpdate(this.dir)
             }
             Wiki.wikis.delete(this)
         })
@@ -145,6 +147,8 @@ export class Wiki {
      * 加载页面资源
      */
     loadWin() {
+        // 加载前先提交变更
+        CheckCommit(this.dir)
         // 服务一旦到达就加载页面，仅加载一次，多了会闪退
         if (this.service && this.service.worker.stdout) {
             // 情况不同，启动条件不同
