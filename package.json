@@ -33,10 +33,6 @@
     "files": [
       "out"
     ],
-    "extraResources": {
-      "from": "out/workers/widdler.js",
-      "to": "app.asar.unpacked/workers/widdler.js"
-    },
     "win": {
       "target": [
         {
