@@ -19,7 +19,7 @@ export function InitAPI() {
       let cwd = Wiki.current.dir
       writeFile(join(cwd, "files", fname), Buffer.from(file))
     } else {
-      new Notification({ title: "不同寻常的错误！" }).show()
+      new Notification({ title: "不同寻常的错误！", body: "窗口聚焦问题！" }).show()
     }
   })
 
@@ -31,7 +31,7 @@ export function InitAPI() {
       let destDIR = join(Wiki.current.dir, "files")
       copyFile(file.path, join(destDIR, file.name))
     } else {
-      new Notification({ title: "文件可能已被删除，无法获取资源！" }).show()
+      new Notification({ title: "无法获取资源", body: "正在操作的文件已不存在" }).show()
     }
   })
 
@@ -58,10 +58,12 @@ export function InitAPI() {
           return counter
         })
         .then(counter => {
-          let note = new Notification({ title: `完毕，共处理 ${counter} 个项目` })
-          let recycle = join(cwd, "files", ".trash")
-          note.show()
-          if (existsSync(recycle)) note.once("click", _ => shell.openPath(recycle))
+          if (counter != 0) {
+            let note = new Notification({ title: "清理完毕", body: `共处理 ${counter} 个项目。` })
+            let recycle = join(cwd, "files", ".trash")
+            note.show()
+            if (existsSync(recycle)) note.once("click", _ => shell.openPath(recycle))
+          }
         })
         .catch(error)
     }

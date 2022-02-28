@@ -101,7 +101,7 @@ export class Wiki {
                 this.win.setTitle(this.win.webContents.getTitle())
             })
         } else {
-            new Notification({ title: "单文件版不支持重载服务！" }).show()
+            new Notification({ title: "当前加载：单文件版", body: "单文件版不支持重载服务！" }).show()
         }
     }
 
