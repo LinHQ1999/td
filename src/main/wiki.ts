@@ -5,7 +5,12 @@ import { existsSync, readdirSync, readJsonSync } from 'fs-extra'
 import path from 'path'
 import { config } from './config'
 import { CheckCommit } from './git'
-import { LaunchType, Service, TWService } from './services'
+import { Service, TWService } from './services'
+
+interface SingleInfo {
+    isSingle: boolean
+    path: string
+}
 
 /**
  * 直接依赖 services 进行服务管理
@@ -19,7 +24,7 @@ export class Wiki {
     service: Service | undefined
     win: BrowserWindow
     // 是否单文件版
-    single: boolean
+    single: SingleInfo
 
     /**
      * 启动新 wiki 并打开新窗口
@@ -41,7 +46,7 @@ export class Wiki {
             this.win = window
         }
 
-        if (this.single) {
+        if (this.single.isSingle) {
             // 环境检查
             if (config.env.wd) {
                 this.service = TWService.launchFile(dir, port)
@@ -85,7 +90,7 @@ export class Wiki {
      */
     restart() {
         // 停止服务，但不要移除窗口
-        if (this.service && !this.single) {
+        if (this.service && !this.single.isSingle) {
             TWService.stop(this.service)
             // 重启
             this.win.setTitle("正在重载服务……")
@@ -152,10 +157,10 @@ export class Wiki {
         // 服务一旦到达就加载页面，仅加载一次，多了会闪退
         if (this.service && this.service.worker.stdout) {
             // 情况不同，启动条件不同
-            if (this.service.type == LaunchType.html) {
+            if (this.single.isSingle) {
                 this.service.worker.once("spawn", async () => {
                     try {
-                        await this.win.loadURL(`http://localhost:${this.service?.port}`)
+                        await this.win.loadURL(`http://localhost:${this.service?.port}/${this.single.path}`)
                         this.win.setTitle(this.win.webContents.getTitle())
                     } catch (_) {
                         this.win.reload()
@@ -178,12 +183,12 @@ export class Wiki {
      * 判断当前 dir 是否是单文件版的
      * @returns 
      */
-    checkSingleFile() {
+    checkSingleFile(): SingleInfo {
         let files = readdirSync(this.dir)
         for (let file of files) {
-            if (file.includes(".html")) return true
+            if (file.includes(".html")) return { path: file, isSingle: true }
         }
-        return false
+        return { path: "", isSingle: false }
     }
 
     /**
