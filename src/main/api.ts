@@ -1,5 +1,6 @@
-import { ipcMain, Notification } from "electron"
-import { copyFile, existsSync, mkdirSync, move, writeFile } from "fs-extra"
+import { ipcMain, Notification, shell } from "electron"
+import { error, info } from "electron-log"
+import { copyFile, existsSync, mkdirSync, move, readdir, writeFile } from "fs-extra"
 import { basename, join } from 'path'
 import { FileInfo } from "./preloads/preload"
 import { Wiki } from "./wiki"
@@ -9,49 +10,91 @@ import { Wiki } from "./wiki"
  */
 export function InitAPI() {
 
-  // 处理 file.path 为空的文件的导入行为
+  /**
+   * 处理 file.path 为空的文件的导入行为
+   * [实验性] 可能存在序列化和反序列化，大文件可能严重影响程序性能！
+   */
   ipcMain.handle("download", (_, file: ArrayBuffer, fname: string) => {
-    if (Wiki.cwd) {
-      let cwd = Wiki.cwd.dir
+    if (Wiki.current) {
+      let cwd = Wiki.current.dir
       writeFile(join(cwd, "files", fname), Buffer.from(file))
-    }
-  })
-
-  // 处理大文件导入
-  ipcMain.handle("import", (_, file: FileInfo) => {
-    if (file.path && Wiki.cwd) {
-      let cwd = Wiki.cwd.dir
-      let base = basename(file.path)
-      let destDIR = join(cwd, "files")
-      if (!existsSync(join(destDIR, base))) {
-        copyFile(file.path, join(destDIR, file.name))
-      } else {
-        new Notification({ title: "已存在相关文件！" }).show()
-      }
     } else {
-      new Notification({ title: "拖你 M 呢，空玩意" }).show()
+      new Notification({ title: "不同寻常的错误！" }).show()
     }
   })
 
   /**
-   * path: ./files/*
+   * 以复制的方式导入文件
    */
-  ipcMain.handle("delete", (_, path: string) => {
-    // 防止执行到一半发生变化，存储快照
-    if (Wiki.cwd) {
-      let cwd = Wiki.cwd.dir
-      let trash = join(cwd, "files", ".trash")
-      if (!existsSync(trash)) {
-        mkdirSync(trash)
-      }
-      let fullpath = join(cwd, path)
-      if (existsSync(fullpath)) {
-        move(fullpath, join(trash, basename(fullpath)), {
-          overwrite: true
-        })
-        // removeSync(fullpath)
-      }
+  ipcMain.handle("import", (_, file: FileInfo) => {
+    if (file.path && Wiki.current) {
+      let destDIR = join(Wiki.current.dir, "files")
+      copyFile(file.path, join(destDIR, file.name))
+    } else {
+      new Notification({ title: "文件可能已被删除，无法获取资源！" }).show()
     }
   })
+
+  /**
+   * 文件对比回收
+   * fname: ./files/foo.bar
+   */
+  ipcMain.handle("gc", (_, fnames: string[]) => {
+    if (Wiki.current) {
+      const cwd = Wiki.current.dir
+      // 去除 ./files/ 前缀
+      let basenames = fnames.map(fname => basename(fname))
+      readdir(join(cwd, "files"))
+        .then(resources => {
+          let counter = 0
+          for (const resource of resources) {
+            if (resource == ".trash") continue
+            if (!basenames.includes(resource)) {
+              info(resource)
+              deleteFile(join("files", resource))
+              counter++
+            }
+          }
+          return counter
+        })
+        .then(counter => {
+          let note = new Notification({ title: `完毕，共处理 ${counter} 个项目` })
+          let recycle = join(cwd, "files", ".trash")
+          note.show()
+          if (existsSync(recycle)) note.once("click", _ => shell.openPath(recycle))
+        })
+        .catch(error)
+    }
+  })
+
+  /**
+   * path: ./files/foo.bar
+   */
+  ipcMain.handle("delete", (_, path: string) => {
+    deleteFile(path)
+  })
+
+}
+
+/**
+ * 将指定路径的文件回收
+ * 
+ * @param path 文件路径[./files/foo.bar]
+ */
+function deleteFile(path: string) {
+  if (Wiki.current) {
+    let cwd = Wiki.current.dir
+    let trash = join(Wiki.current.dir, "files", ".trash")
+    if (!existsSync(trash)) {
+      mkdirSync(trash)
+    }
+    let fullpath = join(cwd, path)
+    if (existsSync(fullpath)) {
+      move(fullpath, join(trash, basename(fullpath)), {
+        overwrite: true
+      })
+      // removeSync(fullpath)
+    }
+  }
 
 }

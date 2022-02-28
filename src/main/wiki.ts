@@ -13,7 +13,7 @@ import { LaunchType, Service, TWService } from './services'
 export class Wiki {
     static wikis: Set<Wiki> = new Set()
     // 窗口聚焦则切换
-    static cwd: Wiki | null = null
+    static current: Wiki | null = null
 
     dir: string
     service: Service | undefined
@@ -140,7 +140,7 @@ export class Wiki {
         })
 
         // 实时更新正在工作的 wiki
-        this.win.on("focus", () => Wiki.cwd = this)
+        this.win.on("focus", () => Wiki.current = this)
     }
 
     /**
