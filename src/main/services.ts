@@ -49,7 +49,7 @@ class TWServices {
         // let workerjs = isDev ? join(__dirname, "workers", "widdler.js") : join(process.resourcesPath, "app.asar.unpacked", "workers", "widdler.js")
         // 重分配端口
         port = TWServices.schport(port)
-        let ps = spawn("widdler", ["-wikis", dir, "-auth", "false", "-http", `0.0.0.0:${port}`])
+        let ps = spawn(config.env?.wd ?? "widdler", ["-wikis", dir, "-auth", "false", "-http", `0.0.0.0:${port}`])
         ps.on("error", error)
 
         let instance = { worker: ps, port: port, type: LaunchType.html }
@@ -79,7 +79,7 @@ class TWServices {
      * @param service 返回的服务
      */
     static stop(service: Service) {
-        if (service.type == LaunchType.html){
+        if (service.type == LaunchType.html) {
             let ps = service.worker as ChildProcess
             ps.kill()
         } else {
@@ -97,4 +97,3 @@ class TWServices {
 }
 
 export { LaunchType, Service, TWServices as TWService }
-

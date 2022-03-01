@@ -7,7 +7,15 @@ import { initMenu } from './menu'
 import { TWService } from './services'
 import { Wiki } from './wiki'
 
+/**
+ * 初始化菜单
+ */
 initMenu();
+
+/**
+ * 响应暴露的 api，需要安装 TDPlugins 插件
+ */
+InitAPI()
 
 if (app.requestSingleInstanceLock()) {
     app.whenReady().then(() => {
@@ -55,8 +63,3 @@ app.on('window-all-closed', function () {
         app.quit()
     }
 })
-
-/**
- * 响应暴露的 api，需要安装 TDPlugins 插件
- */
-InitAPI()

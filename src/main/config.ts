@@ -1,4 +1,5 @@
 import { execSync } from 'child_process'
+import electronIsDev from 'electron-is-dev'
 import { info } from 'electron-log'
 import { default as ElectronStore, default as Store } from 'electron-store'
 import { existsSync } from 'original-fs'
@@ -38,9 +39,14 @@ class Config {
         }
 
         // 获取 widdler 环境
-        if (process.env["GOPATH"]) {
-            let gobin = join(process.env["GOPATH"], "bin", "widdler.exe")
-            this.env.wd = (existsSync(gobin)) ? gobin : undefined
+        let gobin = join(process.env["GOPATH"] ?? "", "bin", "widdler.exe")
+        // 判断是否使用自带的环境
+        if (!existsSync(gobin)) {
+            this.env.wd = electronIsDev ?
+                join(__dirname, "..", "binaries", "widdler.exe")
+                : join(process.resourcesPath, "binaries", "widdler.exe")
+        } else {
+            this.env.wd = gobin
         }
 
         info(this.env)
