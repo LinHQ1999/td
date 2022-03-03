@@ -7,12 +7,28 @@ import { Wiki } from "./wiki"
 
 /**
  * 初始化所有的 preload 中的操作
+ * 接收的所有文件名都不包括 files，只有文件名
  */
 export function InitAPI() {
 
   /**
-   * 处理 file.path 为空的文件的导入行为
    * [实验性] 可能存在序列化和反序列化，大文件可能严重影响程序性能！
+   */
+
+  /**
+   * 将内嵌的 tiddler 转换为 external
+   */
+  ipcMain.handle("convert", (_, file: string, fname: string) => {
+    if (Wiki.current) {
+      let cwd = Wiki.current.dir
+      writeFile(join(cwd, "files", fname), Buffer.from(file, "base64"))
+    } else {
+      new Notification({ title: "不同寻常的错误！", body: "窗口聚焦问题！" }).show()
+    }
+  })
+
+  /**
+   * 处理 file.path 为空的文件的导入行为
    */
   ipcMain.handle("download", (_, file: ArrayBuffer, fname: string) => {
     if (Wiki.current) {

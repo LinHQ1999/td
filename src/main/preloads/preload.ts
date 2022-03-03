@@ -15,6 +15,7 @@ export const api = {
   "import": (info: FileInfo) => ipcRenderer.invoke("import", info),
   "gc": (files: string[]) => ipcRenderer.invoke("gc", files),
   "download": (file:ArrayBuffer, fname:string) => ipcRenderer.invoke("download", file, fname),
+  "convert": (file:string, fname:string) => ipcRenderer.invoke("convert", file, fname),
   "delete": (canonical: string) => ipcRenderer.invoke("delete", canonical)
 }
 contextBridge.exposeInMainWorld("TD", api)
