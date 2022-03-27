@@ -1,7 +1,7 @@
-import { ChildProcess, spawn } from 'child_process'
-import { error } from 'electron-log'
-import { Worker } from 'worker_threads'
-import { config } from './config'
+import {ChildProcess, spawn} from 'child_process'
+import {error} from 'electron-log'
+import {Worker} from 'worker_threads'
+import {config} from './config'
 
 interface Service {
     worker: Worker | ChildProcess
@@ -34,7 +34,7 @@ class TWServices {
             })
         worker.on("error", (err) => error(err.message))
 
-        let instance = { worker, port, type: LaunchType.node }
+        let instance = {worker, port, type: LaunchType.node}
         TWServices.services.add(instance)
         return instance
     }
@@ -52,7 +52,7 @@ class TWServices {
         let ps = spawn(config.env?.wd ?? "widdler", ["-wikis", dir, "-auth", "false", "-http", `0.0.0.0:${port}`])
         ps.on("error", error)
 
-        let instance = { worker: ps, port: port, type: LaunchType.html }
+        let instance = {worker: ps, port: port, type: LaunchType.html}
         TWServices.services.add(instance)
         return instance
     }
@@ -96,4 +96,4 @@ class TWServices {
     }
 }
 
-export { LaunchType, Service, TWServices as TWService }
+export {LaunchType, Service, TWServices as TWService}

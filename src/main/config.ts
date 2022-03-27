@@ -1,10 +1,10 @@
-import { execSync } from 'child_process'
+import {execSync} from 'child_process'
 import electronIsDev from 'electron-is-dev'
-import { info } from 'electron-log'
-import { default as ElectronStore, default as Store } from 'electron-store'
-import { existsSync } from 'original-fs'
-import { platform } from 'os'
-import { join } from 'path'
+import {info} from 'electron-log'
+import {default as ElectronStore, default as Store} from 'electron-store'
+import {existsSync} from 'original-fs'
+import {platform} from 'os'
+import {join} from 'path'
 
 /**
  * 环境参数
@@ -29,7 +29,7 @@ class Config {
         if (!this.env) {
             let exec = join(execSync("npm root -g").toString(), "tiddlywiki", "tiddlywiki.js")
             let os = platform() as string
-            this.env = { os, tw: exec }
+            this.env = {os, tw: exec}
             this.store.set("env", this.env)
         } else if (!existsSync(this.env.tw)) {
             // 适用于存在配置但并不存在可执行文件的情况，将刷新路径

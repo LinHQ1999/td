@@ -1,11 +1,11 @@
-import { BrowserWindow, Notification, shell } from 'electron'
+import {BrowserWindow, Notification, shell} from 'electron'
 import electronIsDev from 'electron-is-dev'
-import { error } from 'electron-log'
-import { existsSync, readdirSync, readJsonSync } from 'fs-extra'
+import {error} from 'electron-log'
+import {existsSync, readdirSync, readJsonSync} from 'fs-extra'
 import path from 'path'
-import { config } from './config'
-import { CheckCommit } from './git'
-import { Service, TWService } from './services'
+import {config} from './config'
+import {CheckCommit} from './git'
+import {Service, TWService} from './services'
 
 interface SingleInfo {
     isSingle: boolean
@@ -76,8 +76,7 @@ export class Wiki {
         }
 
         // 防止视觉闪烁
-        // this.win.once('ready-to-show', this.win.show)
-        this.win.show()
+        this.win.once('ready-to-show', this.win.show)
 
         this.loadWin()
         this.confWin()
@@ -101,7 +100,7 @@ export class Wiki {
                 this.win.setTitle(this.win.webContents.getTitle())
             })
         } else {
-            new Notification({ title: "当前加载：单文件版", body: "单文件版不支持重载服务！" }).show()
+            new Notification({title: "当前加载：单文件版", body: "单文件版不支持重载服务！"}).show()
         }
     }
 
@@ -133,7 +132,7 @@ export class Wiki {
         // 页面内的链接始终采用默认浏览器打开而不是新建一个窗口
         this.win.webContents.setWindowOpenHandler(details => {
             shell.openExternal(details.url)
-            return { action: 'deny' }
+            return {action: 'deny'}
         })
 
         // 关闭窗口之后也关闭服务并移除窗口
@@ -181,14 +180,26 @@ export class Wiki {
 
     /**
      * 判断当前 dir 是否是单文件版的
-     * @returns 
+     * @returns SingleInfo
      */
     checkSingleFile(): SingleInfo {
         let files = readdirSync(this.dir)
         for (let file of files) {
-            if (file.includes(".html")) return { path: file, isSingle: true }
+            if (file.includes(".html")) return {path: file, isSingle: true}
         }
-        return { path: "", isSingle: false }
+        return {path: "", isSingle: false}
+    }
+
+    /**
+     * 通过 BrowserWindow 匹配对应的 wiki 实例
+     */
+    static getWiki(win: BrowserWindow): Wiki | null {
+        for (const wiki of this.wikis) {
+            if (wiki.win.id == win.id) {
+                return wiki
+            }
+        }
+        return null
     }
 
     /**

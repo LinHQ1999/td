@@ -1,8 +1,6 @@
-import { dialog, Menu, shell } from 'electron'
-import { config } from './config'
-import { Wiki } from './wiki'
-
-type MenuTemplate = typeof MenuTmpl
+import {dialog, Menu, shell} from 'electron'
+import {config} from './config'
+import {Wiki} from './wiki'
 
 export let MenuTmpl = [
     {
@@ -10,8 +8,8 @@ export let MenuTmpl = [
         submenu: [
             {
                 label: '打开目录',
-                async click(_: any, browserWindow: Electron.BrowserWindow, event: Electron.Event) {
-                    let selected = await dialog.showOpenDialog(browserWindow, { properties: ["openDirectory"] })
+                async click(_: any, win: Electron.BrowserWindow, _event: Electron.Event) {
+                    let selected = await dialog.showOpenDialog(win, {properties: ["openDirectory"]})
                     if (selected.filePaths.length != 0) {
                         Wiki.wikis.add(new Wiki(selected.filePaths[0]))
                     }
@@ -19,26 +17,24 @@ export let MenuTmpl = [
             },
             {
                 label: '重载服务',
-                async click(_: any, browserWindow: Electron.BrowserWindow, event: Electron.Event) {
-                    for (let wiki of Wiki.wikis) {
-                        if (wiki.win === browserWindow) {
-                            wiki.restart()
-                        }
+                async click(_: any, win: Electron.BrowserWindow, _event: Electron.Event) {
+                    const wiki = Wiki.getWiki(win)
+                    if (wiki) {
+                        wiki.restart()
                     }
                 }
             },
             {
                 label: '设为默认',
-                async click(_: any, browserWindow: Electron.BrowserWindow, event: Electron.Event) {
-                    for (let wiki of Wiki.wikis) {
-                        if (wiki.win === browserWindow) {
-                            config.Opened = wiki.dir
-                        }
+                async click(_: any, win: Electron.BrowserWindow, _event: Electron.Event) {
+                    const wiki = Wiki.getWiki(win)
+                    if (wiki) {
+                        config.Opened = wiki.dir
                     }
                 }
             },
-            { type: 'separator' },
-            { role: 'quit' }
+            {type: 'separator'},
+            {role: 'quit'}
 
         ]
     },
@@ -47,27 +43,27 @@ export let MenuTmpl = [
         submenu: [
             {
                 label: '浏览器中打开',
-                async click(_: any, browserWindow: Electron.BrowserWindow, event: Electron.Event) {
-                    shell.openExternal(browserWindow.webContents.getURL())
+                async click(_: any, win: Electron.BrowserWindow, _event: Electron.Event) {
+                    await shell.openExternal(win.webContents.getURL())
+                    win.minimize()
                 }
-            }, {
+            },
+            {
                 label: '打开所在位置',
-                async click(_: any, browserWindow: Electron.BrowserWindow, event: Electron.Event) {
-                    for (let wiki of Wiki.wikis) {
-                        if (wiki.win === browserWindow) {
-                            shell.openPath(wiki.dir)
-                            return
-                        }
+                async click(_: any, win: Electron.BrowserWindow, _event: Electron.Event) {
+                    const wiki = Wiki.getWiki(win)
+                    if (wiki) {
+                        shell.openPath(wiki.dir)
                     }
                 }
             },
-            { type: 'separator' },
+            {type: 'separator'},
             {
                 label: '开发者工具',
-                async click(_: any, browserWindow: Electron.BrowserWindow, event: Electron.Event) {
-                    browserWindow.webContents.openDevTools()
+                async click(_: any, win: Electron.BrowserWindow, _event: Electron.Event) {
+                    win.webContents.openDevTools()
                 }
-            }, { role: 'reload' },
+            }, {role: 'reload'},
         ]
     }
 ]
