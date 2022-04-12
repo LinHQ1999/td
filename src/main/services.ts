@@ -49,7 +49,7 @@ class TWServices {
         // let workerjs = isDev ? join(__dirname, "workers", "widdler.js") : join(process.resourcesPath, "app.asar.unpacked", "workers", "widdler.js")
         // 重分配端口
         port = TWServices.schport(port)
-        let ps = spawn(config.env?.wd ?? "widdler", ["-wikis", dir, "-auth", "false", "-http", `0.0.0.0:${port}`])
+        let ps = spawn(config.env.wd, ["-wikis", dir, "-auth", "false", "-http", `0.0.0.0:${port}`])
         ps.on("error", error)
 
         let instance = {worker: ps, port: port, type: LaunchType.html}

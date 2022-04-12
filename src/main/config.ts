@@ -1,10 +1,10 @@
-import {execSync} from 'child_process'
+import { execSync } from 'child_process'
 import electronIsDev from 'electron-is-dev'
-import {info} from 'electron-log'
-import {default as ElectronStore, default as Store} from 'electron-store'
-import {existsSync} from 'original-fs'
-import {platform} from 'os'
-import {join} from 'path'
+import { info, error as err } from 'electron-log'
+import { default as ElectronStore, default as Store } from 'electron-store'
+import { existsSync } from 'original-fs'
+import { platform } from 'os'
+import { join } from 'path'
 
 /**
  * 环境参数
@@ -13,52 +13,86 @@ interface Env {
     os: string
     // tiddlywiki.js 路径
     tw: string
-    // widdler 路径，可选
-    wd?: string
+    // widdler 路径
+    wd: string
+
+    opened: string
 }
 
 class Config {
-    env: Env
-    store: ElectronStore
+    // 持久化配置/状态
+    store: ElectronStore<Env>
+
+    // 运行时状态，不持久化
+    has = { tw: true, wd: true }
 
     constructor() {
-        this.store = new Store()
+        this.store = new Store<Env>({
+            defaults: this.scan()
+        })
 
-        // 旧的
-        this.env = this.store.get("env") as Env
-        if (!this.env) {
-            let exec = join(execSync("npm root -g").toString(), "tiddlywiki", "tiddlywiki.js")
-            let os = platform() as string
-            this.env = {os, tw: exec}
-            this.store.set("env", this.env)
-        } else if (!existsSync(this.env.tw)) {
-            // 适用于存在配置但并不存在可执行文件的情况，将刷新路径
-            // 可能并不需要
-            this.env.tw = join(execSync("npm root -g").toString().trim(), "tiddlywiki", "tiddlywiki.js")
-            this.store.set("env", this.env)
+        // 启动时检查原路径是否失效
+        this.check()
+
+        // 更新运行时状态
+        if (!this.has.tw) {
+            // 状态重置
+            this.store.reset()
+            this.check()
+        }
+        if (!this.has.wd) {
+            // Windows 可以使用打包的 widdler
+            if (this.store.get("os") == "win32") {
+                this.store.set("wd", electronIsDev ?
+                    join(__dirname, "..", "binaries", "widdler.exe")
+                    : join(process.resourcesPath, "binaries", "widdler.exe"))
+                // 状态修正
+                this.has.wd = true
+            }
         }
 
-        // 获取 widdler 环境
-        let gobin = join(process.env["GOPATH"] ?? "", "bin", "widdler.exe")
-        // 判断是否使用自带的环境
-        if (!existsSync(gobin)) {
-            this.env.wd = electronIsDev ?
-                join(__dirname, "..", "binaries", "widdler.exe")
-                : join(process.resourcesPath, "binaries", "widdler.exe")
-        } else {
-            this.env.wd = gobin
-        }
-
-        info(this.env)
+        info(this.store.store)
         info(this.Opened)
+        info(this.has)
+    }
+
+    /**
+     * 生成默认的配置
+     * @returns 默认配置
+     */
+    scan(): Env {
+        let os = platform() as string
+
+        let tw = "", wd = ""
+
+        try {
+            tw = join(execSync("npm root -g").toString().trim(), "tiddlywiki", "tiddlywiki.js")
+            wd = join(execSync("go env GOPATH").toString().trim(), "bin", "widdler")
+        } catch (error) {
+            err(error)
+        }
+
+        return { tw, os, wd, opened: "" }
+    }
+
+    check() {
+        if (!existsSync(this.store.get("tw"))) this.has.tw = false
+        if (!existsSync(this.store.get("wd"))) this.has.wd = false
+    }
+
+    /**
+     * 提供兼容层
+     */
+    get env() {
+        return this.store.store
     }
 
     set Opened(dir: string) {
-        this.store.set("last", dir)
+        this.store.set("opened", dir)
     }
 
     get Opened(): string {
-        return this.store.get("last") as string
+        return this.store.get("opened")
     }
 }
 
