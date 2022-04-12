@@ -76,7 +76,7 @@ export class Wiki {
         }
 
         // 防止视觉闪烁
-        this.win.once('ready-to-show', this.win.show)
+        // this.win.once('ready-to-show', this.win.show)
 
         this.loadWin()
         this.confWin()
@@ -207,7 +207,7 @@ export class Wiki {
      * 
      * @returns null
      */
-    static createWindow(title = "等待服务启动", show = false, nomenu = true) {
+    static createWindow(title = "等待服务启动", show = true, nomenu = true) {
         return new BrowserWindow({
             width: 1200,
             height: 800,
