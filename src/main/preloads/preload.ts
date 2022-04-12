@@ -1,21 +1,22 @@
-import { contextBridge, ipcRenderer } from "electron"
+import {contextBridge, ipcRenderer} from "electron"
 
 declare global {
-  interface Window {
-    TD: typeof api
-  }
+    interface Window {
+        TD: typeof api
+    }
 }
 
 export interface FileInfo {
-  name: string
-  path: string
+    name: string
+    path: string
 }
 
 export const api = {
-  "import": (info: FileInfo) => ipcRenderer.invoke("import", info),
-  "gc": (files: string[]) => ipcRenderer.invoke("gc", files),
-  "download": (file:ArrayBuffer, fname:string) => ipcRenderer.invoke("download", file, fname),
-  "convert": (file:string, fname:string) => ipcRenderer.invoke("convert", file, fname),
-  "delete": (canonical: string) => ipcRenderer.invoke("delete", canonical)
+    "import": (info: FileInfo) => ipcRenderer.invoke("import", info),
+    "gc": (files: string[]) => ipcRenderer.invoke("gc", files),
+    "download": (file: ArrayBuffer, fname: string) => ipcRenderer.invoke("download", file, fname),
+    "convert": (file: string, fname: string) => ipcRenderer.invoke("convert", file, fname),
+    "delete": (canonical: string) => ipcRenderer.invoke("delete", canonical),
+    "save": (abspath:string, text: string) => ipcRenderer.invoke("save", abspath, text)
 }
 contextBridge.exposeInMainWorld("TD", api)

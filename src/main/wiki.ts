@@ -1,11 +1,11 @@
-import { BrowserWindow, Notification, shell } from 'electron'
+import {BrowserWindow, Notification, shell} from 'electron'
 import electronIsDev from 'electron-is-dev'
-import { error } from 'electron-log'
-import { existsSync, readdirSync, readJsonSync } from 'fs-extra'
+import {error} from 'electron-log'
+import {existsSync, readdirSync, readJsonSync} from 'fs-extra'
 import path from 'path'
-import { config } from './config'
-import { CheckCommit } from './git'
-import { Service, TWService } from './services'
+import {config} from './config'
+import {CheckCommit} from './git'
+import {Service, TWService} from './services'
 
 interface SingleInfo {
     isSingle: boolean
@@ -46,20 +46,7 @@ export class Wiki {
             this.win = window
         }
 
-        if (this.single.isSingle) {
-            // 环境检查
-            if (config.env.wd) {
-                this.service = TWService.launchFile(dir, port)
-            } else {
-                let note = new Notification({
-                    title: "需要安装 widdler，系统当前不具备此环境",
-                    body: "执行 go install suah.dev/widdler@latest 以进行安装"
-                })
-                note.show()
-                error(note.title, note.body)
-                return
-            }
-        } else {
+        if (!this.single.isSingle) {
             // 启动 node 版
             this.service = TWService.launch(dir, port, ...this.loadCfg())
         }
@@ -101,7 +88,7 @@ export class Wiki {
                 this.win.setTitle(this.win.webContents.getTitle())
             })
         } else {
-            new Notification({ title: "当前加载：单文件版", body: "单文件版不支持重载服务！" }).show()
+            new Notification({title: "当前加载：单文件版", body: "单文件版不支持重载服务！"}).show()
         }
     }
 
@@ -133,7 +120,7 @@ export class Wiki {
         // 页面内的链接始终采用默认浏览器打开而不是新建一个窗口
         this.win.webContents.setWindowOpenHandler(details => {
             shell.openExternal(details.url)
-            return { action: 'deny' }
+            return {action: 'deny'}
         })
 
         // 关闭窗口之后也关闭服务并移除窗口
@@ -154,28 +141,20 @@ export class Wiki {
     loadWin() {
         // 加载前先提交变更
         CheckCommit(this.dir)
-        // 服务一旦到达就加载页面，仅加载一次，多了会闪退
-        if (this.service && this.service.worker.stdout) {
-            // 情况不同，启动条件不同
-            if (this.single.isSingle) {
-                this.service.worker.once("spawn", async () => {
-                    try {
-                        await this.win.loadURL(`http://localhost:${this.service?.port}/${this.single.path}`)
-                        this.win.setTitle(this.win.webContents.getTitle())
-                    } catch (_) {
-                        this.win.reload()
-                    }
-                })
-            } else {
-                this.service.worker.stdout.once("data", async () => {
-                    try {
-                        await this.win.loadURL(`http://localhost:${this.service?.port}`)
-                        this.win.setTitle(this.win.webContents.getTitle())
-                    } catch (_) {
-                        this.win.reload()
-                    }
-                })
-            }
+        if (this.single.isSingle) {
+            this.win.loadFile(this.single.path)
+                .then(() => this.win.setTitle(this.win.webContents.getTitle()))
+                .catch(error)
+        } else if (this.service && this.service.worker.stdout) {
+            // 服务一旦到达就加载页面，仅加载一次，多了会闪退
+            this.service.worker.stdout.once("data", async () => {
+                try {
+                    await this.win.loadURL(`http://localhost:${this.service?.port}`)
+                    this.win.setTitle(this.win.webContents.getTitle())
+                } catch (_) {
+                    this.win.reload()
+                }
+            })
         }
     }
 
@@ -186,9 +165,10 @@ export class Wiki {
     checkSingleFile(): SingleInfo {
         let files = readdirSync(this.dir)
         for (let file of files) {
-            if (file.includes(".html")) return { path: file, isSingle: true }
+            // 采用绝对路径
+            if (file.includes(".html")) return {path: path.join(this.dir, file), isSingle: true}
         }
-        return { path: "", isSingle: false }
+        return {path: "", isSingle: false}
     }
 
     /**

@@ -40,7 +40,8 @@ class TWServices {
     }
 
     /**
-     * (实验性) 使用 widdler 启动单文件 wiki
+     * 使用 widdler 启动单文件 wiki
+     * @deprecated 不再使用外部程序，TD 自己进行管理
      * @param dir wiki 目录
      * @param port 预期端口号
      * @returns none
