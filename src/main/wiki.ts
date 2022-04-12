@@ -21,6 +21,7 @@ export class Wiki {
     static current: Wiki | null = null
 
     dir: string
+    // 单文件不需要后端服务
     service: Service | undefined
     win: BrowserWindow
     // 是否单文件版
@@ -168,6 +169,18 @@ export class Wiki {
             if (file.includes(".html")) return {path: path.join(this.dir, file), isSingle: true}
         }
         return {path: "", isSingle: false}
+    }
+
+    /**
+     * 通过 BrowserWindow 匹配对应的 wiki 实例
+     */
+    static getWiki(win: BrowserWindow): Wiki | null {
+        for (const wiki of this.wikis) {
+            if (wiki.win.id == win.id) {
+                return wiki
+            }
+        }
+        return null
     }
 
     /**
