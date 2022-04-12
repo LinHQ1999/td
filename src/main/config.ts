@@ -43,6 +43,7 @@ class Config {
         if (!this.has.wd) {
             // Windows 可以使用打包的 widdler
             if (this.store.get("os") == "win32") {
+                info("Using bundled server")
                 this.store.set("wd", electronIsDev ?
                     join(__dirname, "..", "binaries", "widdler.exe")
                     : join(process.resourcesPath, "binaries", "widdler.exe"))
