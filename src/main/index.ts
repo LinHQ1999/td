@@ -19,12 +19,17 @@ InitAPI()
 
 if (app.requestSingleInstanceLock()) {
     app.whenReady().then(() => {
-        let lastOpen = config.Opened
-        if (!existsSync(config.env.tw)) {
+        if (!config.has.tw) {
             new Notification({ title: "环境错误", body: "执行 npm i -g tiddlywki" }).show()
             err("宿主机不具备对应环境")
             app.quit()
+        } else if (!config.has.wd) {
+            new Notification({ title: "环境错误", body: "执行 go install suah.dev/widdler@latest" }).show()
+            err("宿主机不具备对应环境")
+            app.quit()
         }
+
+        let lastOpen = config.Opened
         // 检查是否是初始状态或目录已变动
         if (lastOpen == undefined || !existsSync(lastOpen)) {
             let win = Wiki.createWindow()

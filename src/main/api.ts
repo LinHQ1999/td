@@ -74,12 +74,11 @@ export function InitAPI() {
                     return counter
                 })
                 .then(counter => {
-                    if (counter != 0) {
-                        let note = new Notification({title: "清理完毕", body: `共处理 ${counter} 个项目。`})
-                        let recycle = join(cwd, "files", ".trash")
-                        note.show()
-                        if (existsSync(recycle)) note.once("click", _ => shell.openPath(recycle))
-                    }
+                    let note = new Notification({title: "清理完毕", body: `共处理 ${counter} 个项目。`})
+                    note.show()
+                    let recycle = join(cwd, "files", ".trash")
+                    if (existsSync(recycle))
+                        note.once("click", _ => shell.openPath(recycle))
                 })
                 .catch(error)
         }

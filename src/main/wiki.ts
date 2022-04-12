@@ -64,7 +64,6 @@ export class Wiki {
 
         // 防止视觉闪烁
         // this.win.once('ready-to-show', this.win.show)
-        this.win.show()
 
         this.loadWin()
         this.confWin()
@@ -160,7 +159,7 @@ export class Wiki {
 
     /**
      * 判断当前 dir 是否是单文件版的
-     * @returns 
+     * @returns SingleInfo
      */
     checkSingleFile(): SingleInfo {
         let files = readdirSync(this.dir)
@@ -176,7 +175,7 @@ export class Wiki {
      * 
      * @returns null
      */
-    static createWindow(title = "等待服务启动", show = false, nomenu = true) {
+    static createWindow(title = "等待服务启动", show = true, nomenu = true) {
         return new BrowserWindow({
             width: 1200,
             height: 800,
