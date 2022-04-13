@@ -105,8 +105,8 @@ export function InitAPI() {
     ipcMain.on("confirm", (ev: IpcMainEvent, msg: string) => {
         let selected = dialog.showMessageBoxSync(Wiki.current?.win as BrowserWindow,
             {
-                buttons: ["好", "不要"],
-                cancelId: 1,
+                title: "问一下",
+                buttons: ["当然", "没想好"],
                 defaultId: 1,
                 message: msg
             })

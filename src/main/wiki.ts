@@ -1,6 +1,6 @@
 import {BrowserWindow, Notification, shell} from 'electron'
 import electronIsDev from 'electron-is-dev'
-import {error} from 'electron-log'
+import {error, info} from 'electron-log'
 import {existsSync, readdirSync, readJsonSync} from 'fs-extra'
 import path from 'path'
 import {config} from './config'
@@ -117,15 +117,6 @@ export class Wiki {
      * 处理 win 操作相关事宜
      */
     confWin() {
-        // 修复 windows 上弹窗失去焦点，其他平台没有此问题
-        if (config.env.os == "win32") {
-            // 劫持默认的 window.confirm 函数
-            this.win.webContents
-                // 返回可以被序列化的值
-                .executeJavaScript(`window.confirm = message => window.TD.confirm(message);0;`)
-                .catch(error)
-        }
-
         // 页面内的链接始终采用默认浏览器打开而不是新建一个窗口
         this.win.webContents.setWindowOpenHandler(details => {
             shell.openExternal(details.url)
@@ -136,6 +127,7 @@ export class Wiki {
         this.win.once("closed", () => {
             if (this.service) {
                 TWService.stop(this.service);
+                info(`${this.dir} 的服务已关闭!`)
             }
             Wiki.wikis.delete(this)
         })
