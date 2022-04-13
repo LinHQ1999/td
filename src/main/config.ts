@@ -1,10 +1,9 @@
-import { execSync } from 'child_process'
-import electronIsDev from 'electron-is-dev'
-import { info, error as err } from 'electron-log'
-import { default as ElectronStore, default as Store } from 'electron-store'
-import { existsSync } from 'original-fs'
-import { platform } from 'os'
-import { join } from 'path'
+import {execSync} from 'child_process'
+import {error as err, info} from 'electron-log'
+import {default as ElectronStore, default as Store} from 'electron-store'
+import {existsSync} from 'original-fs'
+import {platform} from 'os'
+import {join} from 'path'
 
 /**
  * 环境参数
@@ -13,8 +12,6 @@ interface Env {
     os: string
     // tiddlywiki.js 路径
     tw: string
-    // widdler 路径
-    wd: string
 
     opened: string
 }
@@ -24,7 +21,7 @@ class Config {
     store: ElectronStore<Env>
 
     // 运行时状态，不持久化
-    has = { tw: true, wd: true }
+    has = {tw: true}
 
     constructor() {
         this.store = new Store<Env>({
@@ -40,17 +37,6 @@ class Config {
             this.store.reset()
             this.check()
         }
-        if (!this.has.wd) {
-            // Windows 可以使用打包的 widdler
-            if (this.store.get("os") == "win32") {
-                info("Using bundled server")
-                this.store.set("wd", electronIsDev ?
-                    join(__dirname, "..", "binaries", "widdler.exe")
-                    : join(process.resourcesPath, "binaries", "widdler.exe"))
-                // 状态修正
-                this.has.wd = true
-            }
-        }
 
         info(this.store.store)
         info(this.Opened)
@@ -64,21 +50,19 @@ class Config {
     scan(): Env {
         let os = platform() as string
 
-        let tw = "", wd = ""
+        let tw = ""
 
         try {
             tw = join(execSync("npm root -g").toString().trim(), "tiddlywiki", "tiddlywiki.js")
-            wd = join(execSync("go env GOPATH").toString().trim(), "bin", "widdler")
         } catch (error) {
             err(error)
         }
 
-        return { tw, os, wd, opened: "" }
+        return {tw, os, opened: ""}
     }
 
     check() {
         if (!existsSync(this.store.get("tw"))) this.has.tw = false
-        if (!existsSync(this.store.get("wd"))) this.has.wd = false
     }
 
     /**

@@ -1,4 +1,4 @@
-import {dialog, Menu, shell} from 'electron'
+import {dialog, Menu, shell, Notification} from 'electron'
 import {config} from './config'
 import {Wiki} from './wiki'
 
@@ -44,8 +44,12 @@ export let MenuTmpl = [
             {
                 label: '浏览器中打开',
                 async click(_: any, win: Electron.BrowserWindow, _event: Electron.Event) {
-                    await shell.openExternal(win.webContents.getURL())
-                    win.minimize()
+                    if (Wiki.getWiki(win)?.single.isSingle) {
+                        new Notification({title: "单文件版不支持"}).show()
+                    } else {
+                        await shell.openExternal(win.webContents.getURL())
+                        win.minimize()
+                    }
                 }
             },
             {

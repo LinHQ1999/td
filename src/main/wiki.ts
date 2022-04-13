@@ -23,9 +23,9 @@ export class Wiki {
     dir: string
     // 单文件不需要后端服务
     service: Service | undefined
+    single: SingleInfo
     win: BrowserWindow
     // 是否单文件版
-    single: SingleInfo
 
     /**
      * 启动新 wiki 并打开新窗口
@@ -77,7 +77,7 @@ export class Wiki {
      */
     restart() {
         // 停止服务，但不要移除窗口
-        if (this.service && !this.single.isSingle) {
+        if (!this.single.isSingle && this.service) {
             TWService.stop(this.service)
             // 重启
             this.win.setTitle("正在重载服务……")
@@ -117,7 +117,7 @@ export class Wiki {
      * 处理 win 操作相关事宜
      */
     confWin() {
-        // 其他平台没有此问题
+        // 修复 windows 上弹窗失去焦点，其他平台没有此问题
         if (config.env.os == "win32") {
             // 劫持默认的 window.confirm 函数
             this.win.webContents
@@ -150,6 +150,7 @@ export class Wiki {
     loadWin() {
         // 加载前先提交变更
         CheckCommit(this.dir)
+
         if (this.single.isSingle) {
             this.win.loadFile(this.single.path)
                 .then(() => this.win.setTitle(this.win.webContents.getTitle()))

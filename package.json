@@ -1,6 +1,6 @@
 {
   "name": "td",
-  "version": "2.6.1",
+  "version": "3.0.0",
   "description": "TW 包装程序",
   "homepage": "https://gitee.com/linhq1999/td",
   "main": "out/index.js",
@@ -30,12 +30,6 @@
   "build": {
     "appId": "cn.linhq.td",
     "productName": "td",
-    "extraResources": [
-      {
-        "from": "binaries",
-        "to": "binaries"
-      }
-    ],
     "files": [
       "out"
     ],
