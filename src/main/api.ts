@@ -1,6 +1,6 @@
 import {BrowserWindow, dialog, ipcMain, IpcMainEvent, Notification, shell} from "electron"
 import {error, info} from "electron-log"
-import {copyFile, existsSync, mkdirSync, move, readdir, writeFile} from "fs-extra"
+import {copyFile, copyFileSync, existsSync, mkdirSync, move, readdir, writeFile, writeFileSync} from "fs-extra"
 import {basename, join} from 'path'
 import {FileInfo} from "./preloads/preload"
 import {Wiki} from "./wiki"
@@ -97,6 +97,15 @@ export function InitAPI() {
     ipcMain.handle("save", (_, abspath: string, text: string) => {
         copyFile(abspath, abspath + ".old")
             .then(() => writeFile(abspath, text, {encoding: "UTF-8"}))
+    })
+    ipcMain.on("savesync", (ev: IpcMainEvent, abspath: string, text: string) => {
+        try {
+            copyFileSync(abspath, abspath + ".old")
+            writeFileSync(abspath, text)
+            ev.returnValue = true
+        } catch (_error) {
+            ev.returnValue = false
+        }
     })
 
     /**
