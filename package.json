@@ -1,6 +1,6 @@
 {
   "name": "td",
-  "version": "2.6.0",
+  "version": "2.6.1",
   "description": "TW 包装程序",
   "homepage": "https://gitee.com/linhq1999/td",
   "main": "out/index.js",
@@ -17,8 +17,8 @@
     "@types/electron": "^1.6.10",
     "@types/fs-extra": "^9.0.13",
     "@types/nodegit": "^0.27.10",
-    "electron": "^17.2.0",
-    "electron-builder": "^22.14.13",
+    "electron": "^18.0.3",
+    "electron-builder": "^23.0.3",
     "typescript": "^4.6.3"
   },
   "dependencies": {

@@ -117,13 +117,22 @@ export class Wiki {
      * 处理 win 操作相关事宜
      */
     confWin() {
+        // 其他平台没有此问题
+        if (config.env.os == "win32") {
+            // 劫持默认的 window.confirm 函数
+            this.win.webContents
+                // 返回可以被序列化的值
+                .executeJavaScript(`window.confirm = message => window.TD.confirm(message);0;`)
+                .catch(error)
+        }
+
         // 页面内的链接始终采用默认浏览器打开而不是新建一个窗口
         this.win.webContents.setWindowOpenHandler(details => {
             shell.openExternal(details.url)
             return {action: 'deny'}
         })
 
-        // 关闭窗口之后也关闭服务并移除窗口
+        // 关闭窗口之后也关闭服务（如果有）并移除窗口
         this.win.once("closed", () => {
             if (this.service) {
                 TWService.stop(this.service);

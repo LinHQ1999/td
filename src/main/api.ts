@@ -1,4 +1,4 @@
-import {ipcMain, Notification, shell} from "electron"
+import {BrowserWindow, dialog, ipcMain, IpcMainEvent, Notification, shell} from "electron"
 import {error, info} from "electron-log"
 import {copyFile, existsSync, mkdirSync, move, readdir, writeFile} from "fs-extra"
 import {basename, join} from 'path'
@@ -91,9 +91,27 @@ export function InitAPI() {
         deleteFile(path)
     })
 
+    /**
+     * 进行原生保存
+     */
     ipcMain.handle("save", (_, abspath: string, text: string) => {
         copyFile(abspath, abspath + ".old")
             .then(() => writeFile(abspath, text, {encoding: "UTF-8"}))
+    })
+
+    /**
+     * 劫持默认的 window.confirm
+     */
+    ipcMain.on("confirm", (ev: IpcMainEvent, msg: string) => {
+        let selected = dialog.showMessageBoxSync(Wiki.current?.win as BrowserWindow,
+            {
+                buttons: ["好", "不要"],
+                cancelId: 1,
+                defaultId: 1,
+                message: msg
+            })
+        // 不能用 reply
+        ev.returnValue = selected == 0
     })
 }
 
