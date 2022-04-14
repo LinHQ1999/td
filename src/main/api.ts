@@ -95,8 +95,9 @@ export function InitAPI() {
      * 进行原生保存
      */
     ipcMain.handle("save", (_, abspath: string, text: string) => {
-        copyFile(abspath, abspath + ".old")
-            .then(() => writeFile(abspath, text, {encoding: "UTF-8"}))
+        copyFileSync(abspath, abspath + ".old")
+        writeFile(abspath, text, {encoding: "UTF-8"})
+        return true
     })
     ipcMain.on("savesync", (ev: IpcMainEvent, abspath: string, text: string) => {
         try {
@@ -109,7 +110,7 @@ export function InitAPI() {
     })
 
     /**
-     * 劫持默认的 window.confirm
+     * 劫持默认的 window.confirm 和 alert
      */
     ipcMain.on("confirm", (ev: IpcMainEvent, msg: string) => {
         let selected = dialog.showMessageBoxSync(Wiki.current?.win as BrowserWindow,
@@ -122,6 +123,12 @@ export function InitAPI() {
             })
         // 不能用 reply
         ev.returnValue = selected == 0
+    })
+    ipcMain.on("alert", (ev:IpcMainEvent, msg:string) => {
+        ev.returnValue = dialog.showMessageBoxSync(Wiki.current?.win as BrowserWindow, {
+            title: "注意",
+            message: msg
+        }) == 0
     })
 }
 

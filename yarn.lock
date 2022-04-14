@@ -85,13 +85,6 @@
   dependencies:
     "@types/ms" "*"
 
-"@types/electron@^1.6.10":
-  version "1.6.10"
-  resolved "https://registry.npmmirror.com/@types/electron/-/electron-1.6.10.tgz#7e87888ed3888767cca68e92772c2c8ea46bc873"
-  integrity sha512-MOCVyzIwkBEloreoCVrTV108vSf8fFIJPsGruLCoAoBZdxtnJUqKA4lNonf/2u1twSjAspPEfmEheC+TLm/cMw==
-  dependencies:
-    electron "*"
-
 "@types/fs-extra@^9.0.11", "@types/fs-extra@^9.0.13":
   version "9.0.13"
   resolved "https://registry.npmmirror.com/@types/fs-extra/-/fs-extra-9.0.13.tgz#7594fbae04fe7f1918ce8b3d213f74ff44ac1f45"
@@ -836,15 +829,6 @@ electron-store@^8.0.1:
   dependencies:
     conf "^10.0.3"
     type-fest "^1.0.2"
-
-electron@*:
-  version "17.0.0"
-  resolved "https://registry.npmmirror.com/electron/-/electron-17.0.0.tgz#60f00f3e3c657020e807a519700213943468b4d1"
-  integrity sha512-3UXcBQMwbMWdPvGHaSdPMluHrd+/bc+K143MyvE5zVZ+S1XCHt4sau7dj6svJHns5llN0YG/c6h/vRfadIp8Zg==
-  dependencies:
-    "@electron/get" "^1.13.0"
-    "@types/node" "^14.6.2"
-    extract-zip "^1.0.3"
 
 electron@^17:
   version "17.4.0"
