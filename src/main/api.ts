@@ -1,6 +1,6 @@
 import {BrowserWindow, dialog, ipcMain, IpcMainEvent, Notification, shell} from "electron"
 import {error, info} from "electron-log"
-import {copyFile, copyFileSync, existsSync, mkdirSync, move, readdir, writeFile, writeFileSync} from "fs-extra"
+import {copyFile, copyFileSync, existsSync, mkdirSync, move, pathExistsSync, readdir, writeFile, writeFileSync} from "fs-extra"
 import {basename, join} from 'path'
 import {FileInfo} from "./preloads/preload"
 import {Wiki} from "./wiki"
@@ -20,8 +20,12 @@ export function InitAPI() {
      */
     ipcMain.handle("convert", (_, file: string, fname: string) => {
         if (Wiki.current) {
-            let cwd = Wiki.current.dir
-            writeFile(join(cwd, "files", fname), Buffer.from(file, "base64"))
+            const cwd = Wiki.current.dir
+            const fpath = join(cwd, "files", fname)
+            if (pathExistsSync(fpath))
+                new Notification({title: "文件已存在", body: "考虑重命名文件"}).show()
+            else
+                writeFile(fpath, Buffer.from(file, "base64"))
         } else {
             new Notification({title: "不同寻常的错误！", body: "窗口聚焦问题！"}).show()
         }
@@ -124,7 +128,7 @@ export function InitAPI() {
         // 不能用 reply
         ev.returnValue = selected == 0
     })
-    ipcMain.on("alert", (ev:IpcMainEvent, msg:string) => {
+    ipcMain.on("alert", (ev: IpcMainEvent, msg: string) => {
         ev.returnValue = dialog.showMessageBoxSync(Wiki.current?.win as BrowserWindow, {
             title: "注意",
             message: msg

@@ -1,7 +1,7 @@
 import {BrowserWindow, Notification, shell} from 'electron'
 import electronIsDev from 'electron-is-dev'
 import {error, info} from 'electron-log'
-import {existsSync, readdirSync, readJsonSync} from 'fs-extra'
+import {existsSync, mkdirs, readdirSync, readJsonSync} from 'fs-extra'
 import path from 'path'
 import {config} from './config'
 import {CheckCommit} from './git'
@@ -168,7 +168,11 @@ export class Wiki {
         let files = readdirSync(this.dir)
         for (let file of files) {
             // 采用绝对路径
-            if (file.includes(".html")) return {path: path.join(this.dir, file), isSingle: true}
+            if (file.includes(".html")) {
+                const dirfiles = path.join(this.dir, "files")
+                if (!existsSync(dirfiles)) mkdirs(dirfiles)
+                return {path: path.join(this.dir, file), isSingle: true}
+            }
         }
         return {path: "", isSingle: false}
     }
