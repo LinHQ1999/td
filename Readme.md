@@ -21,12 +21,14 @@
 
 ## 环境
 
-> 确保以下命令能够在终端中执行。
+> 确保以下命令能够在终端中执行
+> 需要安装 nodejs 版 tiddlywiki
 
-1. 需要安装 nodejs 版 tiddlywiki。
+1. `npm root -g`
+2. `tiddlywiki`
 
 ## 构建
 
-1. 安装依赖：`yarn`
-2. 开发环境：`yarn start`
-3. 打包： `yarn dist`
+1. 安装依赖：`pnpm`
+2. 开发环境：`pnpm start`
+3. 打包： `pnpm dist`
