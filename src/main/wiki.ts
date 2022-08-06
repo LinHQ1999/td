@@ -202,7 +202,7 @@ export class Wiki {
             title: title,
             show: show,
             webPreferences: {
-                preload: path.join(__dirname, "preloads", "preload.js")
+                preload: path.join(__dirname, "preloads", "main.js")
             }
         })
     }

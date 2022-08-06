@@ -1,5 +1,6 @@
-import {dialog, Menu, Notification, shell, BrowserWindow} from 'electron'
+import {dialog, Menu, Notification, shell} from 'electron'
 import {config} from './config'
+import {searchWin} from './searchwin'
 import {Wiki} from './wiki'
 
 export let MenuTmpl = [
@@ -56,8 +57,7 @@ export let MenuTmpl = [
                 label: '页面内部搜索',
                 accelerator: "Ctrl+F",
                 async click(_: any, win: Electron.BrowserWindow, _event: Electron.Event) {
-                    // const id = win.webContents.findInPage("主要")
-                    // win.webContents.on("found-in-page", (_, res:any) => console.log(res))
+                    searchWin.instance?.searchIn(win).toggle()
                 }
             },
             {

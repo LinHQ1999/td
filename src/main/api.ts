@@ -2,7 +2,7 @@ import {BrowserWindow, dialog, ipcMain, IpcMainEvent, Notification, shell} from 
 import {error, info} from "electron-log"
 import {copyFile, copyFileSync, existsSync, mkdirSync, move, pathExistsSync, readdir, writeFile, writeFileSync} from "fs-extra"
 import {basename, join} from 'path'
-import {FileInfo} from "./preloads/preload"
+import {FileInfo} from "./preloads/main"
 import {Wiki} from "./wiki"
 
 /**
@@ -10,6 +10,29 @@ import {Wiki} from "./wiki"
  * 接收的所有文件名都不包括 files，只有文件名
  */
 export function InitAPI() {
+
+    ipcMain.handle("search", async (_, text: string, mode: number) => {
+        const current = Wiki.current?.win.webContents ?? null
+        if (current) {
+            const _res = new Promise<Electron.FoundInPageResult>((resolve) => current.once('found-in-page', (_, result) => resolve(result)))
+            switch (mode) {
+                case -1:
+                    current.findInPage(text, {forward: false})
+                    break
+                case 0:
+                    current.stopFindInPage("clearSelection")
+                    break
+                case 1:
+                    current.findInPage(text, {forward: true})
+                    break
+                default:
+                    current.findInPage(text)
+            }
+            const res = await _res
+            return res
+        }
+        return null
+    })
 
     /**
      * [实验性] 可能存在序列化和反序列化，大文件可能严重影响程序性能！

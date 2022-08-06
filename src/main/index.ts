@@ -4,6 +4,7 @@ import {existsSync} from 'fs-extra'
 import {InitAPI} from './api'
 import {config} from './config'
 import {initMenu} from './menu'
+import {searchWin} from './searchwin'
 import {TWService} from './services'
 import {Wiki} from './wiki'
 
@@ -42,6 +43,7 @@ if (app.requestSingleInstanceLock()) {
         } else {
             Wiki.wikis.add(new Wiki(lastOpen))
         }
+        new searchWin()
     }).catch(reason => {
         err(reason)
         app.quit()
