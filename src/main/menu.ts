@@ -56,7 +56,8 @@ export let MenuTmpl = [
                 label: '页面内部搜索',
                 accelerator: "Ctrl+F",
                 async click(_: any, win: Electron.BrowserWindow, _event: Electron.Event) {
-                    // TODO: 添加搜索相关逻辑
+                    // const id = win.webContents.findInPage("主要")
+                    // win.webContents.on("found-in-page", (_, res:any) => console.log(res))
                 }
             },
             {

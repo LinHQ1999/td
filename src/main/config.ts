@@ -35,6 +35,7 @@ class Config {
         if (!this.has.tw) {
             // 状态重置
             this.store.reset()
+            this.scan()
             this.check()
         }
 
