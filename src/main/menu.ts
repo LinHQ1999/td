@@ -45,12 +45,14 @@ export let MenuTmpl = [
             {
                 label: '浏览器中打开',
                 async click(_: any, win: Electron.BrowserWindow, _event: Electron.Event) {
-                    if (Wiki.getWiki(win)?.single.isSingle) {
-                        new Notification({title: "单文件版不支持"}).show()
+                    const single = Wiki.getWiki(win)?.single
+                    if (single && single.isSingle) {
+                        new Notification({title: "仅供预览", body: "默认情况下单文件版不支持编辑"}).show()
+                        await shell.openPath(single.path)
                     } else {
-                        await shell.openExternal(win.webContents.getURL())
-                        win.minimize()
+                        await shell.openPath(win.webContents.getURL())
                     }
+                    win.minimize()
                 }
             },
             {
