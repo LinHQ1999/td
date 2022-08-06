@@ -1,4 +1,4 @@
-import {dialog, Menu, shell, Notification} from 'electron'
+import {dialog, Menu, Notification, shell, BrowserWindow} from 'electron'
 import {config} from './config'
 import {Wiki} from './wiki'
 
@@ -53,6 +53,13 @@ export let MenuTmpl = [
                 }
             },
             {
+                label: '页面内部搜索',
+                accelerator: "Ctrl+F",
+                async click(_: any, win: Electron.BrowserWindow, _event: Electron.Event) {
+                    // TODO: 添加搜索相关逻辑
+                }
+            },
+            {
                 label: '打开所在位置',
                 async click(_: any, win: Electron.BrowserWindow, _event: Electron.Event) {
                     const wiki = Wiki.getWiki(win)
@@ -64,6 +71,7 @@ export let MenuTmpl = [
             {type: 'separator'},
             {
                 label: '开发者工具',
+                accelerator: "Ctrl+Alt+Shift+F12",
                 async click(_: any, win: Electron.BrowserWindow, _event: Electron.Event) {
                     win.webContents.openDevTools()
                 }
