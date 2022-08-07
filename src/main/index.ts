@@ -43,7 +43,8 @@ if (app.requestSingleInstanceLock()) {
         } else {
             Wiki.wikis.add(new Wiki(lastOpen))
         }
-        new searchWin()
+        // 先注释掉，否则会占用窗口退出不了
+        // new searchWin()
     }).catch(reason => {
         err(reason)
         app.quit()
