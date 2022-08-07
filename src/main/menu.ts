@@ -1,4 +1,4 @@
-import {dialog, Menu, Notification, shell} from 'electron'
+import {dialog, Menu, Notification, shell, BrowserWindow} from 'electron'
 import {config} from './config'
 import {Wiki} from './wiki'
 
