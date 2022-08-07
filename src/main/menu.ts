@@ -1,6 +1,5 @@
 import {dialog, Menu, Notification, shell} from 'electron'
 import {config} from './config'
-import {searchWin} from './searchwin'
 import {Wiki} from './wiki'
 
 export let MenuTmpl = [
@@ -59,7 +58,8 @@ export let MenuTmpl = [
                 label: '页面内部搜索',
                 accelerator: "Ctrl+F",
                 async click(_: any, win: Electron.BrowserWindow, _event: Electron.Event) {
-                    searchWin.instance?.searchIn(win).toggle()
+                    new Notification({title: "还未实现", body: ""}).show()
+                    // searchWin.instance?.searchIn(win).toggle()
                 }
             },
             {
