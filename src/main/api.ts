@@ -11,10 +11,9 @@ import {Wiki} from "./wiki"
  */
 export function InitAPI() {
 
-    ipcMain.handle("search", async (_, text: string, mode: number) => {
+    ipcMain.handle("search:exec", (_, text: string, mode: number) => {
         const current = Wiki.current?.win.webContents ?? null
         if (current) {
-            const _res = new Promise<Electron.FoundInPageResult>((resolve) => current.once('found-in-page', (_, result) => resolve(result)))
             switch (mode) {
                 case -1:
                     current.findInPage(text, {forward: false})
@@ -28,10 +27,7 @@ export function InitAPI() {
                 default:
                     current.findInPage(text)
             }
-            const res = await _res
-            return res
         }
-        return null
     })
 
     /**

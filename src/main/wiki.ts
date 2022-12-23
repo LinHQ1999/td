@@ -132,6 +132,10 @@ export class Wiki {
             Wiki.wikis.delete(this)
         })
 
+        this.win.webContents.on("found-in-page", (_, res) => {
+            this.win.webContents.send("search:res", res)
+        })
+
         // 实时更新正在工作的 wiki
         this.win.on("focus", () => Wiki.current = this)
     }
