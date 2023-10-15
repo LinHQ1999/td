@@ -1,11 +1,11 @@
-import {BrowserWindow, Notification, shell} from 'electron'
+import { BrowserWindow, Notification, dialog, shell } from 'electron'
 import electronIsDev from 'electron-is-dev'
-import {error, info} from 'electron-log'
-import {existsSync, mkdirs, readdirSync, readJsonSync} from 'fs-extra'
+import { error, info } from 'electron-log'
+import { existsSync, mkdirs, readdirSync, readJsonSync } from 'fs-extra'
 import path from 'path'
-import {config} from './config'
-import {CheckCommit} from './git'
-import {Service, TWService} from './services'
+import { config } from './config'
+import { CheckCommit } from './git'
+import { Service, TWService } from './services'
 
 interface SingleInfo {
     isSingle: boolean
@@ -88,7 +88,7 @@ export class Wiki {
                 this.win.setTitle(this.win.webContents.getTitle())
             })
         } else {
-            new Notification({title: "当前加载：单文件版", body: "单文件版不支持重载服务！"}).show()
+            new Notification({ title: "当前加载：单文件版", body: "单文件版不支持重载服务！" }).show()
         }
     }
 
@@ -120,7 +120,20 @@ export class Wiki {
         // 页面内的链接始终采用默认浏览器打开而不是新建一个窗口
         this.win.webContents.setWindowOpenHandler(details => {
             shell.openExternal(details.url)
-            return {action: 'deny'}
+            return { action: 'deny' }
+        })
+
+        this.win.webContents.on('will-prevent-unload', (event) => {
+            let selected = dialog.showMessageBoxSync(this.win,
+                {
+                    title: "等一下",
+                    buttons: ["去保存", "不管了"],
+                    cancelId: 1,
+                    defaultId: 1,
+                    message: '你似乎没有保存！'
+                })
+            // 0 是去保存
+            !!selected && event.preventDefault()
         })
 
         // 关闭窗口之后也关闭服务（如果有）并移除窗口
@@ -175,10 +188,10 @@ export class Wiki {
             if (file.includes(".html")) {
                 const dirfiles = path.join(this.dir, "files")
                 if (!existsSync(dirfiles)) mkdirs(dirfiles)
-                return {path: path.join(this.dir, file), isSingle: true}
+                return { path: path.join(this.dir, file), isSingle: true }
             }
         }
-        return {path: "", isSingle: false}
+        return { path: "", isSingle: false }
     }
 
     /**
