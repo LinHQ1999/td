@@ -128,8 +128,8 @@ export class Wiki {
                 {
                     title: "等一下",
                     buttons: ["去保存", "不管了"],
-                    cancelId: 1,
-                    defaultId: 1,
+                    cancelId: 0,
+                    defaultId: 0,
                     message: '你似乎没有保存！'
                 })
             // 0 是去保存
