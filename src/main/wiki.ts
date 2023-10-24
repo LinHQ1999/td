@@ -1,11 +1,10 @@
-import { BrowserWindow, Notification, dialog, shell } from 'electron'
+import {BrowserWindow, Notification, dialog, shell} from 'electron'
 import electronIsDev from 'electron-is-dev'
-import { error, info } from 'electron-log'
-import { existsSync, mkdirs, readdirSync, readJsonSync } from 'fs-extra'
+import {error, info} from 'electron-log'
+import {existsSync, mkdirs, readJsonSync, readdirSync} from 'fs-extra'
 import path from 'path'
-import { config } from './config'
-import { CheckCommit } from './git'
-import { Service, TWService } from './services'
+import {config} from './config'
+import {Service, TWService} from './services'
 
 interface SingleInfo {
     isSingle: boolean
@@ -158,7 +157,7 @@ export class Wiki {
      */
     loadWin() {
         // 加载前先提交变更
-        CheckCommit(this.dir)
+        // CheckCommit(this.dir)
 
         if (this.single.isSingle) {
             this.win.loadFile(this.single.path)

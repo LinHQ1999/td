@@ -4,7 +4,6 @@ import {existsSync} from 'fs-extra'
 import {InitAPI} from './api'
 import {config} from './config'
 import {initMenu} from './menu'
-import {searchWin} from './searchwin'
 import {TWService} from './services'
 import {Wiki} from './wiki'
 
