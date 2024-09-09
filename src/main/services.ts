@@ -1,6 +1,8 @@
-import {error} from 'electron-log'
+import {error, info} from 'electron-log'
 import {Worker} from 'worker_threads'
 import {config} from './config'
+import { Notification, shell } from 'electron'
+import { join } from 'path/win32'
 
 interface Service {
     worker: Worker
@@ -8,7 +10,6 @@ interface Service {
 }
 
 class TWServices {
-    static tw: string = config.env.tw
     static services = new Set<Service>()
     /**
      * 启动 nodejs 版 wiki, 考虑结合 enum 实现
@@ -20,11 +21,28 @@ class TWServices {
     static launch(dir: string, port: number, ...args: string[]): Service {
         port = TWServices.schport(port)
 
-        let worker = new Worker(TWServices.tw,
-            {
-                argv: [dir, "--listen", `port=${port}`].concat(args)
-            })
-        worker.on("error", (err) => error(err.message))
+        const tw = config.tw
+        // 此处检查 tw 环境
+        console.log(`是否存在 tw ${!tw}`)
+        if (!tw) {
+          const guide = new Notification( { title: '请执行 npm i -g tiddlywiki' })
+          guide.show()
+          guide.once('click', () => shell.openPath(join(process.env.APPDATA ?? '', 'td', 'logs', 'main.log')))
+          throw new Error('No tw detected!')
+        }
+
+        // 检查通过更新缓存
+        info('更新 tw 路径成功！')
+        config.tw = tw
+
+        let worker = new Worker(tw,
+                                {
+          argv: [dir, "--listen", `port=${port}`].concat(args)
+        })
+        worker.on("error", (err) => {
+          error(err.message)
+          throw err
+        })
 
         let instance = {worker, port}
         TWServices.services.add(instance)
@@ -37,14 +55,14 @@ class TWServices {
      * @returns 解决冲突后的端口号
      */
     static schport(port: number): number {
-        // 先判断在不在表中很有必要，否则端口可能会取到负数
-        let actual = port
-        for (let service of TWServices.services) {
-            if (service.port == actual) {
-                actual = service.port + 1
-            }
+      // 先判断在不在表中很有必要，否则端口可能会取到负数
+      let actual = port
+      for (let service of TWServices.services) {
+        if (service.port == actual) {
+          actual = service.port + 1
         }
-        return actual
+      }
+      return actual
     }
 
     /**
@@ -53,14 +71,14 @@ class TWServices {
      * @param service 返回的服务
      */
     static stop(service: Service) {
-        service.worker.terminate()
-        TWServices.services.delete(service)
+      service.worker.terminate()
+      TWServices.services.delete(service)
     }
 
     static stopAll() {
-        for (let service of TWServices.services) {
-            TWServices.stop(service)
-        }
+      for (let service of TWServices.services) {
+        TWServices.stop(service)
+      }
     }
 }
 

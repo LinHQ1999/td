@@ -3,6 +3,7 @@ import electronIsDev from 'electron-is-dev'
 import {error, info} from 'electron-log'
 import {existsSync, mkdirs, readJsonSync, readdirSync} from 'fs-extra'
 import path from 'path'
+import {env} from 'process'
 import {config} from './config'
 import {Service, TWService} from './services'
 
@@ -50,7 +51,6 @@ export class Wiki {
             // 启动 node 版
             this.service = TWService.launch(dir, port, ...this.loadCfg())
         }
-
         // 获取 wiki 中的自定义 ico，只有 windows 才能够进行此设置
         // 同时只有 windows 才能自动关闭菜单
         if (config.env.os == "win32") {
@@ -67,8 +67,6 @@ export class Wiki {
 
         this.loadWin()
         this.confWin()
-
-        if (electronIsDev) this.win.webContents.openDevTools()
     }
 
     /**
@@ -174,6 +172,8 @@ export class Wiki {
                 }
             })
         }
+
+        this.win.webContents.once('dom-ready', () => electronIsDev && this.win.webContents.openDevTools({mode: 'detach'}))
     }
 
     /**
