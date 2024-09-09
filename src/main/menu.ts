@@ -117,5 +117,5 @@ export const MenuTmpl = [
 ];
 
 export function initMenu() {
-  Menu.setApplicationMenu(Menu.buildFromTemplate(MenuTmpl));
+  Menu.setApplicationMenu(Menu.buildFromTemplate(<any>MenuTmpl));
 }
