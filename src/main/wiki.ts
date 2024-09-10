@@ -86,7 +86,7 @@ export class Wiki {
         ...this.loadCfg(),
       );
       // 并刷新
-      this.service.worker.stdout?.once("data", () => {
+      this.service.childProcess.stdout?.once("data", () => {
         this.win.reload();
         this.win.setTitle(this.win.webContents.getTitle());
       });
@@ -169,9 +169,9 @@ export class Wiki {
         .loadFile(this.single.path)
         .then(() => this.win.setTitle(this.win.webContents.getTitle()))
         .catch(error);
-    } else if (this.service && this.service.worker.stdout) {
+    } else if (this.service && this.service.childProcess.stdout) {
       // 服务一旦到达就加载页面，仅加载一次，多了会闪退
-      this.service.worker.stdout.once("data", async () => {
+      this.service.childProcess.stdout.once("data", async () => {
         try {
           await this.win.loadURL(`http://localhost:${this.service?.port}`);
           this.win.setTitle(this.win.webContents.getTitle());

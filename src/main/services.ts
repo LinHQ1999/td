@@ -1,11 +1,11 @@
 import { error, info } from "electron-log";
-import { Worker } from "worker_threads";
+import { fork, ChildProcess } from 'child_process'
 import { config } from "./config";
 import { Notification, shell } from "electron";
 import { join } from "path/win32";
 
 interface Service {
-  worker: Worker;
+  childProcess: ChildProcess;
   port: number;
 }
 
@@ -39,15 +39,14 @@ class TWServices {
     info("更新 tw 路径成功！");
     config.tw = tw;
 
-    const worker = new Worker(tw, {
-      argv: [dir, "--listen", `port=${port}`].concat(args),
-    });
-    worker.on("error", (err) => {
-      error(err.message);
+    // fork 比 worker 性能更好
+    const childProcess = fork(tw, [dir, "--listen", `port=${port}`].concat(args), { stdio: 'pipe' }); /* 不指定为 pipe stdout 无法接受消息 */
+    childProcess.on("exit", (err) => {
+      error(err);
       throw err;
     });
 
-    const instance = { worker, port };
+    const instance = {  childProcess, port };
     TWServices.services.add(instance);
     return instance;
   }
@@ -74,7 +73,7 @@ class TWServices {
    * @param service 返回的服务
    */
   static stop(service: Service) {
-    service.worker.terminate();
+    service.childProcess.kill();
     TWServices.services.delete(service);
   }
 
