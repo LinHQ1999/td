@@ -1,4 +1,4 @@
-import { error, info } from "electron-log";
+import { info } from "electron-log";
 import { fork, ChildProcess } from 'child_process'
 import { config } from "./config";
 import { Notification, shell } from "electron";
@@ -18,12 +18,10 @@ class TWServices {
    * @param {string[]} args 额外启动参数，一行一组
    * @returns
    */
-  static launch(dir: string, port: number, ...args: string[]): Service {
+  static async launch(dir: string, port: number, ...args: string[]): Promise<Service> {
     port = TWServices.schport(port);
 
     const tw = config.tw;
-    // 此处检查 tw 环境
-    console.log(`是否存在 tw ${!tw}`);
     if (!tw) {
       const guide = new Notification({ title: "请执行 npm i -g tiddlywiki" });
       guide.show();
@@ -41,12 +39,11 @@ class TWServices {
 
     // fork 比 worker 性能更好
     const childProcess = fork(tw, [dir, "--listen", `port=${port}`].concat(args), { stdio: 'pipe' }); /* 不指定为 pipe stdout 无法接受消息 */
-    childProcess.on("exit", (err) => {
-      error(err);
-      throw err;
+    childProcess.on("exit", () => {
+      info("子进程已成功结束");
     });
 
-    const instance = {  childProcess, port };
+    const instance = { childProcess, port };
     TWServices.services.add(instance);
     return instance;
   }

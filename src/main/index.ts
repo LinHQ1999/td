@@ -1,66 +1,62 @@
 import { app, BrowserWindow, dialog } from "electron";
 import { error as err, warn } from "electron-log";
-import { existsSync } from "fs-extra";
+import { pathExists } from "fs-extra";
 import { InitAPI } from "./api";
 import { config } from "./config";
 import { initMenu } from "./menu";
 import { TWService } from "./services";
 import { Wiki } from "./wiki";
 
-/**
- * 初始化菜单
- */
-initMenu();
+(async () => {
 
-/**
- * 响应暴露的 api，需要安装 TDPlugins 插件
- */
-InitAPI();
+  /**
+   * 初始化菜单
+   */
+  initMenu();
 
-if (app.requestSingleInstanceLock()) {
-  app
-    .whenReady()
-    .then(() => {
+  /**
+   * 响应暴露的 api，需要安装 TDPlugins 插件
+   */
+  InitAPI();
+
+  try {
+    if (app.requestSingleInstanceLock()) {
+      await app.whenReady()
       const lastOpen = config.Opened;
       // 检查是否是初始状态或目录已变动
-      if (lastOpen == undefined || !existsSync(lastOpen)) {
+      if (lastOpen == undefined || !await pathExists(lastOpen)) {
         const win = Wiki.createWindow();
-        dialog
-          .showOpenDialog(win, { properties: ["openDirectory"] })
-          .then((selected) => {
-            const paths = selected.filePaths;
-            if (paths.length != 0) {
-              const first = new Wiki(paths[0], win);
-              Wiki.wikis.add(first);
-              // 把第一次打开的作为默认值
-              config.Opened = first.dir;
-            }
-          });
+        const selected = await dialog.showOpenDialog(win, { properties: ["openDirectory"] })
+        const paths = selected.filePaths;
+        if (paths.length != 0) {
+          const first = await Wiki.createWiki(paths[0], win);
+          Wiki.wikis.add(first);
+          // 把第一次打开的作为默认值
+          config.Opened = first.dir;
+        }
       } else {
-        Wiki.wikis.add(new Wiki(lastOpen));
+        Wiki.wikis.add(await Wiki.createWiki(lastOpen));
       }
-      // 先注释掉，否则会占用窗口退出不了
-      // new searchWin()
-    })
-    .catch((reason) => {
-      err(reason);
+    } else {
+      warn("不允许多实例");
       app.quit();
-    });
-} else {
-  warn("不允许多实例");
-  app.quit();
-}
-
-app.on("activate", function () {
-  if (BrowserWindow.getAllWindows().length === 0) {
-    // Wiki.createWindow().loadFile(path.join(__dirname, "render", "oops.html"))
+    }
+  } catch (reason) {
+    err(reason);
     app.quit();
   }
-});
 
-app.on("window-all-closed", function () {
-  if (process.platform !== "darwin") {
-    TWService.stopAll();
-    app.quit();
-  }
-});
+  app.on("activate", function () {
+    if (BrowserWindow.getAllWindows().length === 0) {
+      // Wiki.createWindow().loadFile(path.join(__dirname, "render", "oops.html"))
+      app.quit();
+    }
+  });
+
+  app.on("window-all-closed", function () {
+    if (process.platform !== "darwin") {
+      TWService.stopAll();
+      app.quit();
+    }
+  });
+})()

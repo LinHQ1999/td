@@ -1,12 +1,12 @@
 import { BrowserWindow, Notification, dialog, shell } from "electron";
 import electronIsDev from "electron-is-dev";
 import { error, info } from "electron-log";
-import { existsSync, mkdirs, readJsonSync, readdirSync } from "fs-extra";
+import { ensureDir, pathExists, readJson, readdir } from "fs-extra";
 import path from "path";
 import { config } from "./config";
 import { Service, TWService } from "./services";
 
-interface SingleInfo {
+interface WikiInfo {
   isSingle: boolean;
   path: string;
 }
@@ -22,7 +22,7 @@ export class Wiki {
   dir: string;
   // 单文件不需要后端服务
   service: Service | undefined;
-  single: SingleInfo;
+  single: WikiInfo;
   win: BrowserWindow;
   // 是否单文件版
 
@@ -35,55 +35,33 @@ export class Wiki {
    */
   constructor(
     dir: string,
-    window: BrowserWindow | null = null,
-    port: number = 11111,
+    window: BrowserWindow,
+    wikiType: WikiInfo,
+    service?: Service
   ) {
     this.dir = dir;
-    this.single = this.checkSingleFile();
+    this.single = wikiType;
+    this.win = window
+    this.service = service
+
     // 防止误操作，始终绑定本身对象
-    this.confWin.bind(this);
-
-    if (!window) {
-      // 创建浏览器窗口
-      this.win = Wiki.createWindow();
-    } else {
-      this.win = window;
-    }
-
-    if (!this.single.isSingle) {
-      // 启动 node 版
-      this.service = TWService.launch(dir, port, ...this.loadCfg());
-    }
-    // 获取 wiki 中的自定义 ico，只有 windows 才能够进行此设置
-    // 同时只有 windows 才能自动关闭菜单
-    if (config.env.os == "win32") {
-      const icon = path.join(dir, "tiddlers", "$__favicon.ico");
-      if (existsSync(icon)) this.win.setIcon(icon);
-    } else {
-      this.win.setMenuBarVisibility(true);
-      this.win.setAutoHideMenuBar(false);
-    }
-
-    // 防止视觉闪烁
-    // this.win.once('ready-to-show', this.win.show)
-
-    this.loadWin();
-    this.confWin();
+    this.confWin.apply(this);
   }
+
 
   /**
    * 重启服务
    */
-  restart() {
+  async restart() {
     // 停止服务，但不要移除窗口
-    if (!this.single.isSingle && this.service) {
+    if (!this.single.isSingle && this.service !== undefined) {
       TWService.stop(this.service);
       // 重启
       this.win.setTitle("正在重载服务……");
-      this.service = TWService.launch(
+      this.service = await TWService.launch(
         this.dir,
         this.service.port,
-        ...this.loadCfg(),
+        ...await Wiki.loadCfg(this.dir),
       );
       // 并刷新
       this.service.childProcess.stdout?.once("data", () => {
@@ -103,12 +81,12 @@ export class Wiki {
    *
    * @returns 额外的 listen 参数
    */
-  loadCfg(): string[] {
+  static async loadCfg(dir: string): Promise<string[]> {
     // 总是压缩
     const params: string[] = ["gzip=yes"];
-    const file = path.join(this.dir, "launch.json");
-    if (existsSync(file)) {
-      const cfg = readJsonSync(file);
+    const file = path.join(dir, "launch.json");
+    if (await pathExists(file)) {
+      const cfg = await readJson(file);
       for (const [k, v] of Object.entries(cfg)) {
         const param = `${k}=${v}`;
         // 检查重复项
@@ -137,7 +115,7 @@ export class Wiki {
         message: "你似乎没有保存！",
       });
       // 0 是去保存
-      !!selected && event.preventDefault();
+      if (selected !== 0) event.preventDefault();
     });
 
     // 关闭窗口之后也关闭服务（如果有）并移除窗口
@@ -157,49 +135,73 @@ export class Wiki {
     this.win.on("focus", () => (Wiki.current = this));
   }
 
-  /**
-   * 加载页面资源
-   */
-  loadWin() {
-    // 加载前先提交变更
-    // CheckCommit(this.dir)
-
-    if (this.single.isSingle) {
-      this.win
-        .loadFile(this.single.path)
-        .then(() => this.win.setTitle(this.win.webContents.getTitle()))
-        .catch(error);
-    } else if (this.service && this.service.childProcess.stdout) {
-      // 服务一旦到达就加载页面，仅加载一次，多了会闪退
-      this.service.childProcess.stdout.once("data", async () => {
-        try {
-          await this.win.loadURL(`http://localhost:${this.service?.port}`);
-          this.win.setTitle(this.win.webContents.getTitle());
-        } catch (_) {
-          this.win.reload();
-        }
-      });
+  // Factory pattern to avoid asynchronous constructor
+  static async createWiki(dir: string, bindWin?: BrowserWindow | undefined, port = 11111): Promise<Wiki> {
+    let win: BrowserWindow
+    if (!bindWin) {
+      // 创建浏览器窗口
+      win = Wiki.createWindow();
+    } else {
+      win = bindWin;
     }
 
-    this.win.webContents.once(
+    const wkType = await Wiki.checkSingleFile(dir)
+    let service: Service | undefined = undefined
+
+    // 在 await 前注册监听器
+    win.webContents.once(
       "dom-ready",
       () =>
-        electronIsDev && this.win.webContents.openDevTools({ mode: "detach" }),
+        electronIsDev && win.webContents.openDevTools({ mode: "detach" }),
     );
+
+    if (wkType.isSingle) {
+      await win.loadFile(wkType.path)
+      win.setTitle(win.webContents.getTitle())
+    } else {
+      // 启动 node 版
+      service = await TWService.launch(dir, port, ...await this.loadCfg(dir));
+      if (service.childProcess.stdout) {
+        service.childProcess.stdout.once("data", async () => {
+          try {
+            await win.loadURL(`http://localhost:${service?.port}`);
+            win.setTitle(win.webContents.getTitle());
+          } catch (err) {
+            error(`重试载入内容 ${err}`)
+            win.reload();
+          }
+        });
+      }
+    }
+
+    // 获取 wiki 中的自定义 ico，只有 windows 才能够进行此设置
+    // 同时只有 windows 才能自动关闭菜单
+    if (config.env.os == "win32") {
+      const icon = path.join(dir, "tiddlers", "$__favicon.ico");
+      if (await pathExists(icon)) win.setIcon(icon);
+    } else {
+      win.setMenuBarVisibility(true);
+      win.setAutoHideMenuBar(false);
+    }
+
+    // 防止视觉闪烁
+    // this.win.once('ready-to-show', this.win.show)
+
+    return new Wiki(dir, win, wkType, service)
   }
 
   /**
    * 判断当前 dir 是否是单文件版的
    * @returns SingleInfo
    */
-  checkSingleFile(): SingleInfo {
-    const files = readdirSync(this.dir);
+  static async checkSingleFile(dir: string): Promise<WikiInfo> {
+    const files = await readdir(dir);
     for (const file of files) {
       // 采用绝对路径
       if (file.includes(".html")) {
-        const dirfiles = path.join(this.dir, "files");
-        if (!existsSync(dirfiles)) mkdirs(dirfiles);
-        return { path: path.join(this.dir, file), isSingle: true };
+        const attachmentDir = path.join(dir, "files");
+        ensureDir(attachmentDir)
+        return { path: path.join(dir, file), isSingle: true };
       }
     }
     return { path: "", isSingle: false };

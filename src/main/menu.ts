@@ -17,7 +17,7 @@ export const MenuTmpl = [
             properties: ["openDirectory"],
           });
           if (selected.filePaths.length != 0) {
-            Wiki.wikis.add(new Wiki(selected.filePaths[0]));
+            Wiki.wikis.add(await Wiki.createWiki(selected.filePaths[0]));
           }
         },
       },
