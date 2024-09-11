@@ -22,7 +22,7 @@ export class Wiki {
   dir: string;
   // 单文件不需要后端服务
   service: Service | undefined;
-  single: WikiInfo;
+  wkType: WikiInfo;
   win: BrowserWindow;
   // 是否单文件版
 
@@ -39,22 +39,25 @@ export class Wiki {
     wikiType: WikiInfo,
     service?: Service
   ) {
+    Wiki.current = this
+
     this.dir = dir;
-    this.single = wikiType;
+    this.wkType = wikiType;
     this.win = window
     this.service = service
 
     // 防止误操作，始终绑定本身对象
     this.confWin.apply(this);
-  }
 
+    info(`Current wiki has changed to ${this.dir}`)
+  }
 
   /**
    * 重启服务
    */
   async restart() {
     // 停止服务，但不要移除窗口
-    if (!this.single.isSingle && this.service !== undefined) {
+    if (!this.wkType.isSingle && this.service !== undefined) {
       TWService.stop(this.service);
       // 重启
       this.win.setTitle("正在重载服务……");
@@ -145,6 +148,16 @@ export class Wiki {
       win = bindWin;
     }
 
+    // 获取 wiki 中的自定义 ico，只有 windows 才能够进行此设置
+    // 同时只有 windows 才能自动关闭菜单
+    if (config.env.os == "win32") {
+      const icon = path.join(dir, "tiddlers", "$__favicon.ico");
+      if (await pathExists(icon)) win.setIcon(icon);
+    } else {
+      win.setMenuBarVisibility(true);
+      win.setAutoHideMenuBar(false);
+    }
+
     const wkType = await Wiki.checkSingleFile(dir)
     let service: Service | undefined = undefined
 
@@ -172,16 +185,6 @@ export class Wiki {
           }
         });
       }
-    }
-
-    // 获取 wiki 中的自定义 ico，只有 windows 才能够进行此设置
-    // 同时只有 windows 才能自动关闭菜单
-    if (config.env.os == "win32") {
-      const icon = path.join(dir, "tiddlers", "$__favicon.ico");
-      if (await pathExists(icon)) win.setIcon(icon);
-    } else {
-      win.setMenuBarVisibility(true);
-      win.setAutoHideMenuBar(false);
     }
 
     // 防止视觉闪烁

@@ -38,6 +38,7 @@ class TWServices {
     config.tw = tw;
 
     // fork 比 worker 性能更好
+    info(`启动参数：${args}`)
     const childProcess = fork(tw, [dir, "--listen", `port=${port}`].concat(args), { stdio: 'pipe' }); /* 不指定为 pipe stdout 无法接受消息 */
     childProcess.on("exit", () => {
       info("子进程已成功结束");

@@ -61,7 +61,7 @@ export const MenuTmpl = [
           win: Electron.BrowserWindow,
           _event: Electron.Event,
         ) {
-          const single = Wiki.getWiki(win)?.single;
+          const single = Wiki.getWiki(win)?.wkType;
           if (single && single.isSingle) {
             new Notification({
               title: "仅供预览",
