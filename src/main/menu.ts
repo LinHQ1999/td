@@ -28,7 +28,7 @@ export const MenuTmpl = [
           win: Electron.BrowserWindow,
           _event: Electron.Event,
         ) {
-          const wiki = Wiki.getWiki(win);
+          const wiki = Wiki.byWindow(win);
           if (wiki) {
             wiki.restart();
           }
@@ -41,7 +41,7 @@ export const MenuTmpl = [
           win: Electron.BrowserWindow,
           _event: Electron.Event,
         ) {
-          const wiki = Wiki.getWiki(win);
+          const wiki = Wiki.byWindow(win);
           if (wiki) {
             config.Opened = wiki.dir;
           }
@@ -61,7 +61,7 @@ export const MenuTmpl = [
           win: Electron.BrowserWindow,
           _event: Electron.Event,
         ) {
-          const single = Wiki.getWiki(win)?.wkType;
+          const single = Wiki.byWindow(win)?.wkType;
           if (single && single.isSingle) {
             new Notification({
               title: "仅供预览",
@@ -93,7 +93,7 @@ export const MenuTmpl = [
           win: Electron.BrowserWindow,
           _event: Electron.Event,
         ) {
-          const wiki = Wiki.getWiki(win);
+          const wiki = Wiki.byWindow(win);
           if (wiki) {
             shell.openPath(wiki.dir);
           }

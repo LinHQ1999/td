@@ -1,10 +1,12 @@
-import { execSync } from "child_process";
+import { exec as _exec } from "child_process";
+import { promisify } from 'util'
 import { info } from "electron-log";
 import { default as ElectronStore, default as Store } from "electron-store";
-import { existsSync } from "original-fs";
 import { join } from "path";
 import { platform } from "os";
+import { pathExists } from "fs-extra";
 
+const exec = promisify(_exec)
 /**
  * 环境参数
  */
@@ -36,16 +38,18 @@ class Config {
   /**
    * 缓存 -> 实时 -> undefined
    */
-  get tw(): string | undefined {
+  async getTW(): Promise<string | undefined> {
     const prev = this.store.get("tw");
-    if (existsSync(prev as string)) return prev;
+    if (await pathExists(prev as string)) return prev;
+    const { stdout } = await exec("npm root -g")
     const tw = join(
-      execSync("npm root -g").toString().trim(),
+      stdout.toString().trim(),
       "tiddlywiki",
       "tiddlywiki.js",
     );
-    info(`尝试使用新获取的 tw 路径 ${tw}`);
-    return existsSync(tw) ? tw : undefined;
+    info(`更新 tw 路径 ${prev} --> ${tw}`);
+    this.tw = tw
+    return await pathExists(tw) ? tw : undefined;
   }
 
   set tw(path: string | undefined) {

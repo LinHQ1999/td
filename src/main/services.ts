@@ -21,7 +21,7 @@ class TWServices {
   static async launch(dir: string, port: number, ...args: string[]): Promise<Service> {
     port = TWServices.schport(port);
 
-    const tw = config.tw;
+    const tw = await config.getTW();
     if (!tw) {
       const guide = new Notification({ title: "请执行 npm i -g tiddlywiki" });
       guide.show();
@@ -33,13 +33,9 @@ class TWServices {
       throw new Error("No tw detected!");
     }
 
-    // 检查通过更新缓存
-    info("更新 tw 路径成功！");
-    config.tw = tw;
-
     // fork 比 worker 性能更好
     info(`启动参数：${args}`)
-    const childProcess = fork(tw, [dir, "--listen", `port=${port}`].concat(args), { stdio: 'pipe' }); /* 不指定为 pipe stdout 无法接受消息 */
+    const childProcess = fork(tw, [dir, "--listen", `port=${port}`].concat(args), { stdio: 'pipe' }); /* 不指定为 pipe stdout 无法接收 data */
     childProcess.on("exit", () => {
       info("子进程已成功结束");
     });
