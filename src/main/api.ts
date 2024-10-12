@@ -1,4 +1,5 @@
 import {
+  FindInPageOptions,
   ipcMain,
   IpcMainEvent,
 } from "electron";
@@ -10,30 +11,17 @@ import {
 import { FileInfo } from "./preloads/main";
 import { Wiki } from "./wiki";
 
+export interface ISearchOpts {
+  text: string,
+  cancel: boolean,
+  opts: FindInPageOptions
+}
+
 /**
  * 初始化所有的 preload 中的操作
  * 接收的所有文件名都不包括 files，只有文件名
  */
 export function InitAPI() {
-  /* ipcMain.handle("search:exec", (_, text: string, mode: number) => {
-    const current = Wiki.current?.win.webContents ?? null;
-    if (current) {
-      switch (mode) {
-        case -1:
-          current.findInPage(text, { forward: false });
-          break;
-        case 0:
-          current.stopFindInPage("clearSelection");
-          break;
-        case 1:
-          current.findInPage(text, { forward: true });
-          break;
-        default:
-          current.findInPage(text);
-      }
-    }
-  }); */
-
   /**
    * [实验性] 可能存在序列化和反序列化，大文件可能严重影响程序性能！
    */
@@ -102,4 +90,14 @@ export function InitAPI() {
   ipcMain.on("alert", (ev: IpcMainEvent, msg: string) => {
     ev.returnValue = Wiki.bySender(ev.sender)?.alert(msg) == 0;
   });
+
+  /**
+   * 页面内搜索，代偿浏览器
+   */
+  ipcMain.on('search', (ev: IpcMainEvent, action: ISearchOpts) => {
+    if (action.cancel) ev.sender.stopFindInPage('clearSelection')
+    else ev.sender.findInPage(action.text, action.opts)
+
+    ev.reply('search', [])
+  })
 }

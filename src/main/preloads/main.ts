@@ -1,4 +1,6 @@
 import { contextBridge, ipcRenderer } from "electron";
+import { ISearchOpts } from "../api";
+import { IpcRendererEvent } from "electron/renderer";
 
 export interface FileInfo {
   name: string;
@@ -19,11 +21,8 @@ export const api = {
     ipcRenderer.sendSync("savesync", abspath, text),
   confirm: (msg: string) => ipcRenderer.sendSync("confirm", msg),
   alert: (msg: string) => ipcRenderer.sendSync("alert", msg),
-  search: (text: string, mode?: -1 | 0 | 1) =>
-    ipcRenderer.invoke("search:exec", text, mode),
-  onSearch: (callback: (_: Event, res: Electron.FoundInPageResult) => null) => {
-    ipcRenderer.on("search:res", callback);
-  },
+  search: (action: ISearchOpts) => ipcRenderer.send("search", action),
+  onSearch: (handler: (e: IpcRendererEvent ,res: string[]) => void) => ipcRenderer.on("search", handler)
 };
 
 contextBridge.exposeInMainWorld("TD", api);
