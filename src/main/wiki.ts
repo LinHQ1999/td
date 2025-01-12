@@ -66,7 +66,7 @@ export class Wiki {
         ...await Wiki.loadCfg(this.dir),
       );
       // 并刷新
-      this.service.childProcess.stdout?.once("data", () => {
+      this.service.worker.stdout?.once("data", () => {
         this.win.reload();
         this.win.setTitle(this.win.webContents.getTitle());
       });
@@ -274,8 +274,8 @@ export class Wiki {
     } else {
       // 启动 node 版
       service = await TWService.launch(dir, port, ...await this.loadCfg(dir));
-      if (service.childProcess.stdout) {
-        service.childProcess.stdout.once("data", async () => {
+      if (service.worker.stdout) {
+        service.worker.stdout.once("data", async () => {
           try {
             await win.loadURL(`http://localhost:${service?.port}`);
             win.setTitle(win.webContents.getTitle());

@@ -1,11 +1,11 @@
 import { info } from "electron-log";
-import { fork, ChildProcess } from 'child_process'
 import { config } from "./config";
 import { Notification, shell } from "electron";
 import { join } from "path/win32";
+import { Worker } from 'worker_threads'
 
 interface Service {
-  childProcess: ChildProcess;
+  worker: Worker;
   port: number;
 }
 
@@ -35,12 +35,19 @@ class TWServices {
 
     // fork 比 worker 性能更好
     info(`启动参数：${args}`)
-    const childProcess = fork(tw, [dir, "--listen", `port=${port}`].concat(args), { stdio: 'pipe' }); /* 不指定为 pipe stdout 无法接收 data */
-    childProcess.on("exit", () => {
-      info("子进程已成功结束");
+    const worker = new Worker(tw, {
+      argv: [dir, "--listen", `port=${port}`].concat(args),
     });
+    // const childProcess = fork(tw, [dir, "--listen", `port=${port}`].concat(args), { stdio: 'pipe' }); /* 不指定为 pipe stdout 无法接收 data */
+    // childProcess.on("exit", () => {
+    //   info("子进程已成功结束");
+    // });
 
-    const instance = { childProcess, port };
+    worker.on('exit', () => {
+      info("子线程已成功结束");
+    })
+
+    const instance = { worker, port };
     TWServices.services.add(instance);
     return instance;
   }
@@ -67,7 +74,7 @@ class TWServices {
    * @param service 返回的服务
    */
   static stop(service: Service) {
-    service.childProcess.kill();
+    service.worker.terminate();
     TWServices.services.delete(service);
   }
 
