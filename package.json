@@ -51,9 +51,6 @@
       "target": [
         {
           "target": "AppImage"
-        },
-        {
-          "target": "pacman"
         }
       ]
     }
