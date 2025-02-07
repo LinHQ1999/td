@@ -15,7 +15,7 @@ cat <<D > $dest
 [Desktop Entry]
 Name=Tiddly Desktop
 Comment=Tiddlywiki for Desktop
-Exec=$(realpath ./dist/td-3.1.1.AppImage)
+Exec=$(realpath ./dist/td-3.1.1.AppImage) --ozone-platform-hint=auto
 Icon=$(realpath ./build/icon.png)
 Terminal=false
 Type=Application
