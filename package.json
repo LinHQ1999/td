@@ -8,6 +8,7 @@
     "pack": "tsc && electron-builder --dir",
     "dist": "tsc && electron-builder",
     "start": "tsc && electron .",
+    "startmon": "nodemon",
     "postinstall": "install-app-deps"
   },
   "keywords": [],
