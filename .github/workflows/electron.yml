@@ -3,7 +3,7 @@ name: TD builder
 on:
   push: 
     tags: 
-      - 'v[1-9].*.*'
+      - '[vV][1-9].*.*'
 
 jobs:
   build:
@@ -28,6 +28,7 @@ jobs:
     - name: Build
       run: | 
         pnpm install
+        pnpm vite build
         pnpm dist
 
     - name: Build and release

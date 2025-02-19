@@ -38,10 +38,6 @@ class TWServices {
       info("子进程已成功结束");
     });
 
-    twInstance.on('exit', () => {
-      info("子线程已成功结束");
-    })
-
     const instance = {  twInstance, port };
     TWServices.services.add(instance);
     return instance;

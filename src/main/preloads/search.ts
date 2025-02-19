@@ -1,8 +1,13 @@
 import { contextBridge, ipcRenderer } from "electron";
+import { ISearchOpts, ISearchRes } from "../api";
 
 export const api = {
-  search: (text: string, mode: number) =>
-    ipcRenderer.invoke("search", text, mode),
+  search: (opt: ISearchOpts) => {
+    ipcRenderer.send("search", opt)
+  },
+  onSearch: (cb: (res: ISearchRes) => void) => {
+    ipcRenderer.on("search:res", (_, res: ISearchRes) => cb(res))
+  }
 };
 
 contextBridge.exposeInMainWorld("SC", api);

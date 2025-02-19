@@ -1,4 +1,5 @@
 import {
+  BrowserWindow,
   FindInPageOptions,
   ipcMain,
   IpcMainEvent,
@@ -8,8 +9,16 @@ import {
   writeFile,
   writeFileSync,
 } from "fs-extra";
+
 import { FileInfo } from "./preloads/main";
 import { Wiki } from "./wiki";
+
+export interface ISearchRes {
+  requestId: number,
+  activeMatchOrdinal: number,
+  matches: number,
+  finalUpdate: boolean
+}
 
 export interface ISearchOpts {
   text: string,
@@ -95,9 +104,6 @@ export function InitAPI() {
    * 页面内搜索，代偿浏览器
    */
   ipcMain.on('search', (ev: IpcMainEvent, action: ISearchOpts) => {
-    if (action.cancel) ev.sender.stopFindInPage('clearSelection')
-    else ev.sender.findInPage(action.text, action.opts)
-
-    ev.reply('search', [])
+    Wiki.byWindow(BrowserWindow.fromWebContents(ev.sender)?.getParentWindow() as BrowserWindow)?.search(action)
   })
 }

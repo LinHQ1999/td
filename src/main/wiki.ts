@@ -6,6 +6,7 @@ import { join, basename } from "path";
 import { config } from "./config";
 import { Service, TWService } from "./services";
 import { FileInfo } from "./preloads/main";
+import { ISearchOpts } from "./api";
 
 interface WikiInfo {
   isSingle: boolean;
@@ -27,6 +28,7 @@ export class Wiki {
   service: Service | undefined;
   wkType: WikiInfo;
   win: BrowserWindow;
+  searchWin: BrowserWindow | undefined;
   // 是否单文件版
 
   /**
@@ -46,6 +48,7 @@ export class Wiki {
     this.wkType = wikiType;
     this.win = window
     this.service = service
+    this.searchWin = undefined;
 
     // 防止误操作，始终绑定本身对象
     this.confWin.apply(this);
@@ -75,6 +78,57 @@ export class Wiki {
         title: "当前加载：单文件版",
         body: "单文件版不支持重载服务！",
       }).show();
+    }
+  }
+
+  moveSearchWin() {
+    if (!this.searchWin) return
+
+    const [px, py] = this.win.getPosition()
+    const [pw] = this.win.getSize()
+    const [cw] = this.searchWin.getSize()
+
+    this.searchWin.setPosition(px + pw - cw - 50, py + 50, false)
+  }
+
+  search(opt: ISearchOpts) {
+    if (opt.cancel || !opt.text) {
+      this.searchToggle(false)
+      this.win.webContents.stopFindInPage("clearSelection")
+    } else {
+      this.win.webContents.findInPage(opt.text, opt.opts)
+    }
+  }
+
+  searchToggle(state: boolean) {
+    if (!this.searchWin) {
+      this.searchWin = new BrowserWindow({
+        width: 340,
+        height: 40,
+        resizable: false,
+        frame: false,
+        alwaysOnTop: true,
+
+        parent: this.win,
+
+        webPreferences: {
+          preload: join(__dirname, "preloads", "search.js"),
+        },
+      })
+
+      if (electronIsDev)
+        this.searchWin.loadURL("http://127.0.0.1:5173")
+      else
+        this.searchWin.loadFile(join(__dirname, "static", "index.html"))
+    }
+
+    if (state) {
+      this.moveSearchWin()
+
+      this.searchWin.show()
+    } else {
+      this.searchWin?.hide()
+      this.win.focus()
     }
   }
 
@@ -224,6 +278,17 @@ export class Wiki {
       if (selected !== 0) event.preventDefault();
     });
 
+    // 自动调整搜索框位置，当心 this 问题
+    // resize 会有大小变动的 bug
+    this.win.on('resized', () => this.moveSearchWin())
+    this.win.on('moved', () => this.moveSearchWin())
+    // this.win.on('enter-full-screen', () => this.moveSearchWin())
+    // this.win.on('leave-full-screen', () => this.moveSearchWin())
+
+    this.win.webContents.on('found-in-page', (_, res) => {
+      this.searchWin?.webContents.send('search:res', res)
+    })
+
     // 关闭窗口之后也关闭服务（如果有）并移除窗口
     this.win.once("closed", () => {
       if (this.service) {
@@ -231,10 +296,6 @@ export class Wiki {
         info(`${this.dir} 的服务已关闭!`);
       }
       Wiki.wikis.delete(this);
-    });
-
-    this.win.webContents.on("found-in-page", (_, res) => {
-      this.win.webContents.send("search:res", res);
     });
   }
 

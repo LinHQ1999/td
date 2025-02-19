@@ -82,8 +82,7 @@ export const MenuTmpl = [
           win: Electron.BrowserWindow,
           _event: Electron.Event,
         ) {
-          new Notification({ title: "还未实现", body: "" }).show();
-          // searchWin.instance?.searchIn(win).toggle()
+          Wiki.byWindow(win)?.searchToggle(true)
         },
       },
       {
