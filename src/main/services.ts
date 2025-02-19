@@ -2,10 +2,10 @@ import { info } from "electron-log";
 import { config } from "./config";
 import { Notification, shell } from "electron";
 import { join } from "path/win32";
-import { Worker } from 'worker_threads'
+import { UtilityProcess, utilityProcess } from "electron/main";
 
 interface Service {
-  worker: Worker;
+  twInstance: UtilityProcess;
   port: number;
 }
 
@@ -33,21 +33,16 @@ class TWServices {
       throw new Error("No tw detected!");
     }
 
-    // fork 比 worker 性能更好
-    info(`启动参数：${args}`)
-    const worker = new Worker(tw, {
-      argv: [dir, "--listen", `port=${port}`].concat(args),
+    const twInstance = utilityProcess.fork(tw, [dir, "--listen", `port=${port}`].concat(args), { stdio: 'pipe' }); /* 不指定为 pipe stdout 无法接收 data */
+    twInstance.on("exit", () => {
+      info("子进程已成功结束");
     });
-    // const childProcess = fork(tw, [dir, "--listen", `port=${port}`].concat(args), { stdio: 'pipe' }); /* 不指定为 pipe stdout 无法接收 data */
-    // childProcess.on("exit", () => {
-    //   info("子进程已成功结束");
-    // });
 
-    worker.on('exit', () => {
+    twInstance.on('exit', () => {
       info("子线程已成功结束");
     })
 
-    const instance = { worker, port };
+    const instance = {  twInstance, port };
     TWServices.services.add(instance);
     return instance;
   }
@@ -74,7 +69,7 @@ class TWServices {
    * @param service 返回的服务
    */
   static stop(service: Service) {
-    service.worker.terminate();
+    service.twInstance.kill();
     TWServices.services.delete(service);
   }
 
