@@ -15,7 +15,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - uses: pnpm/action-setup@2
+    - uses: pnpm/action-setup@v4.1.0
       with:
         version: 8.14.0
         
@@ -34,7 +34,7 @@ jobs:
     - name: Build and release
       uses: actions/upload-artifact@v4
       with:
-        name: td-build
+        name: td-build-${{ github.ref_name }}
         path: 
           dist/win-unpacked
       
