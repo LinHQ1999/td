@@ -1,17 +1,15 @@
 body {
-    align-items: center;
-    display: flex;
-    justify-content: center;
     margin: 0;
     overflow: hidden;
-    padding: 8px;
+    --icon-size: 20px;
 }
 
 #container {
     align-items: center;
+    justify-content: center;
     display: flex;
-    height: 100%;
-    width: 100%;
+    height: 100vh;
+    width: 100vw;
 }
 
 #container input {
@@ -38,7 +36,7 @@ body {
     border-radius: 4px;
     border: 0;
     cursor: pointer;
-    font-size: 20px;
+    font-size: var(--icon-size);
     line-height: 20px;
     margin-right: 4px;
     padding: 0;
@@ -46,12 +44,39 @@ body {
     vertical-align: middle;
 }
 
-.buttons button:hover {
+.buttons button:hover:not(:disabled) {
     background-color: gray;
     color: white;
 }
 
-.buttons button:active {
+.buttons button:active:not(:disabled) {
     background-color: black;
     color: white;
+}
+
+.buttons button:disabled {
+    cursor: not-allowed;
+}
+
+.indicator {
+    flex: 0 2.7em;
+    text-align: center;
+    user-select: none;
+    cursor: default;
+}
+
+.indicator .rotate {
+    animation: rotate linear 1s infinite;
+    font-size: var(--icon-size);
+    vertical-align: bottom;
+}
+
+@keyframes rotate {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(-360deg);
+    }
 }

@@ -81,6 +81,9 @@ export class Wiki {
     }
   }
 
+  /**
+   * 跟据 resized 和 moved 事件重新计算搜索窗口位置
+   */
   moveSearchWin() {
     if (!this.searchWin) return
 
@@ -91,7 +94,11 @@ export class Wiki {
     this.searchWin.setPosition(px + pw - cw - 50, py + 50, false)
   }
 
+  /**
+   * 执行页面内搜索
+   */
   search(opt: ISearchOpts) {
+    console.log(opt)
     if (opt.cancel || !opt.text) {
       this.searchToggle(false)
       this.win.webContents.stopFindInPage("clearSelection")
@@ -100,6 +107,9 @@ export class Wiki {
     }
   }
 
+  /**
+   * 控制搜索窗口显示隐藏，懒加载实现
+   */
   searchToggle(state: boolean) {
     if (!this.searchWin) {
       this.searchWin = new BrowserWindow({
@@ -107,7 +117,6 @@ export class Wiki {
         height: 40,
         resizable: false,
         frame: false,
-        alwaysOnTop: true,
 
         parent: this.win,
 
@@ -124,7 +133,6 @@ export class Wiki {
 
     if (state) {
       this.moveSearchWin()
-
       this.searchWin.show()
     } else {
       this.searchWin?.hide()

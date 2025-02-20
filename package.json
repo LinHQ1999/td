@@ -1,12 +1,12 @@
 {
   "name": "td",
-  "version": "3.2.0",
+  "version": "3.2.1",
   "description": "TW 包装程序",
   "homepage": "https://gitee.com/linhq1999/td",
   "main": "out/index.js",
   "scripts": {
     "pack": "tsc && electron-builder --dir",
-    "dist": "tsc && electron-builder",
+    "dist": "vite build --emptyOutDir && tsc && electron-builder",
     "start": "tsc && electron .",
     "startmon": "nodemon",
     "postinstall": "install-app-deps"

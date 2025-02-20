@@ -12,6 +12,8 @@
 - 重载服务
 - 页面内搜索
 
+![搜索功能截图](./shortcuts.jpg)
+
 ## 将 td-plugins.json 拖至你的 wiki 以添加增强功能
 
 1. 单文件支持。
