@@ -6,7 +6,7 @@ import { config } from "./config";
 import { initMenu } from "./menu";
 import { TWService } from "./services";
 import { Wiki } from "./wiki";
-import { handlePathErr, PathErr } from "./utils";
+import { handlePathErr } from "./utils";
 
 (async () => {
 

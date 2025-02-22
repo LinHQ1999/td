@@ -404,11 +404,11 @@ export class Wiki {
    *
    * @returns null
    */
-  static createWindow(title = "等待服务启动", show = true, nomenu = true) {
+  static createWindow(title = "等待服务启动", show = true, hidemenu = true) {
     return new BrowserWindow({
       width: 1200,
       height: 800,
-      autoHideMenuBar: nomenu,
+      autoHideMenuBar: hidemenu,
       title: title,
       show: show,
       webPreferences: {

@@ -37,6 +37,7 @@ class Config {
 
   /**
    * 缓存 -> 实时 -> undefined
+   * 执行 npm root -g 是启动性能瓶颈之一
    */
   async getTW(): Promise<string | undefined> {
     const prev = this.store.get("tw");
