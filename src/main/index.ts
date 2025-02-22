@@ -30,7 +30,7 @@ import { Wiki } from "./wiki";
         const selected = await dialog.showOpenDialog(win, { properties: ["openDirectory"] })
         const paths = selected.filePaths;
         if (paths.length != 0 && !selected.canceled) {
-          const first = await Wiki.createWiki(paths[0], win);
+          const first = await Wiki.bootstrap(paths[0], win);
           Wiki.wikis.add(first);
           // 把第一次打开的作为默认值
           config.Opened = first.dir;
@@ -39,7 +39,7 @@ import { Wiki } from "./wiki";
           app.quit()
         }
       } else {
-        Wiki.wikis.add(await Wiki.createWiki(lastOpen));
+        Wiki.wikis.add(await Wiki.bootstrap(lastOpen));
       }
     } else {
       warn("不允许多实例");

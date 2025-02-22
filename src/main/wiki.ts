@@ -117,6 +117,7 @@ export class Wiki {
         height: 40,
         resizable: false,
         frame: false,
+        show: false,
 
         parent: this.win,
 
@@ -308,7 +309,7 @@ export class Wiki {
   }
 
   // Factory pattern to avoid asynchronous constructor
-  static async createWiki(dir: string, bindWin?: BrowserWindow | undefined, port = 11111): Promise<Wiki> {
+  static async bootstrap(dir: string, bindWin?: BrowserWindow | undefined, port = 11111): Promise<Wiki> {
     let win: BrowserWindow
     if (!bindWin) {
       // 创建浏览器窗口
