@@ -7,6 +7,7 @@ import { config } from "./config";
 import { Service, TWService } from "./services";
 import { FileInfo } from "./preloads/main";
 import { ISearchOpts } from "./api";
+import { PathErr } from "./utils";
 
 interface WikiInfo {
   isSingle: boolean;
@@ -310,13 +311,10 @@ export class Wiki {
 
   // Factory pattern to avoid asynchronous constructor
   static async bootstrap(dir: string, bindWin?: BrowserWindow | undefined, port = 11111): Promise<Wiki> {
-    let win: BrowserWindow
-    if (!bindWin) {
-      // 创建浏览器窗口
-      win = Wiki.createWindow();
-    } else {
-      win = bindWin;
-    }
+    const wkType = await Wiki.getWikiType(dir)
+    let service: Service | undefined = undefined
+
+    const win: BrowserWindow = bindWin ? bindWin : Wiki.createWindow()
 
     // 获取 wiki 中的自定义 ico，只有 windows 才能够进行此设置
     // 同时只有 windows 才能自动关闭菜单
@@ -327,9 +325,6 @@ export class Wiki {
       win.setMenuBarVisibility(true);
       win.setAutoHideMenuBar(false);
     }
-
-    const wkType = await Wiki.checkSingleFile(dir)
-    let service: Service | undefined = undefined
 
     // 在 await 前注册监听器
     win.webContents.once(
@@ -360,14 +355,16 @@ export class Wiki {
     // 防止视觉闪烁
     // this.win.once('ready-to-show', this.win.show)
 
-    return new Wiki(dir, win, wkType, service)
+    const wiki = new Wiki(dir, win, wkType, service)
+    Wiki.wikis.add(wiki)
+    return wiki
   }
 
   /**
    * 判断当前 dir 是否是单文件版的
    * @returns SingleInfo
    */
-  static async checkSingleFile(dir: string): Promise<WikiInfo> {
+  static async getWikiType(dir: string): Promise<WikiInfo> {
     const files = await readdir(dir);
     for (const file of files) {
       // 采用绝对路径
@@ -376,8 +373,10 @@ export class Wiki {
         ensureDir(attachmentDir)
         return { path: join(dir, file), isSingle: true };
       }
+
+      if (file === 'tiddlywiki.info') return { path: "", isSingle: false };
     }
-    return { path: "", isSingle: false };
+    throw new PathErr('无效路径！', dir)
   }
 
   /**

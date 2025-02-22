@@ -1,6 +1,8 @@
 import { dialog, Menu, Notification, shell } from "electron";
+import { error } from 'electron-log'
 import { config } from "./config";
 import { Wiki } from "./wiki";
+import { handlePathErr, PathErr } from "./utils";
 
 export const MenuTmpl = [
   {
@@ -13,11 +15,16 @@ export const MenuTmpl = [
           win: Electron.BrowserWindow,
           _event: Electron.Event,
         ) {
-          const selected = await dialog.showOpenDialog(win, {
-            properties: ["openDirectory"],
-          });
-          if (selected.filePaths.length != 0) {
-            Wiki.wikis.add(await Wiki.bootstrap(selected.filePaths[0]));
+          try {
+            const selected = await dialog.showOpenDialog(win, {
+              properties: ["openDirectory"],
+            });
+            if (selected.filePaths.length === 1) {
+              // 不加 await 则捕获不到错误！
+              await Wiki.bootstrap(selected.filePaths[0])
+            }
+          } catch (e) {
+            handlePathErr(e)
           }
         },
       },
