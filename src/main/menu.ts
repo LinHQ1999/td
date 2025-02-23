@@ -1,8 +1,9 @@
 import { dialog, Menu, Notification, shell } from "electron";
-import { error } from 'electron-log'
 import { config } from "./config";
 import { Wiki } from "./wiki";
-import { handlePathErr, PathErr } from "./utils";
+import { handlePathErr } from "./utils";
+import { BrowserWindow } from "electron/main";
+import ElectronLog from "electron-log";
 
 export const MenuTmpl = [
   {
@@ -107,12 +108,22 @@ export const MenuTmpl = [
       },
       { type: "separator" },
       {
+        label: "打开应用日志",
+        async click(
+          _: any,
+          win: BrowserWindow,
+          _event: Electron.Event
+        ) {
+          shell.openPath(ElectronLog.transports.file.getFile().path)
+        }
+      },
+      {
         label: "开发者工具",
         accelerator: "Ctrl+Alt+Shift+F12",
         async click(
           _: any,
           win: Electron.BrowserWindow,
-          _event: Electron.Event,
+          _event: Electron.Event
         ) {
           win.webContents.openDevTools();
         },

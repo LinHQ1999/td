@@ -1,5 +1,5 @@
 import { app, BrowserWindow, dialog } from "electron";
-import { info, error as err, warn } from "electron-log";
+import log, { debug, info, error as err, warn } from "electron-log";
 import { pathExists } from "fs-extra";
 import { InitAPI } from "./api";
 import { config } from "./config";
@@ -9,6 +9,9 @@ import { Wiki } from "./wiki";
 import { handlePathErr } from "./utils";
 
 (async () => {
+  log.transports.file.level = 'warn'
+
+  debug('应用启动')
 
   /**
    * 初始化菜单
@@ -20,11 +23,14 @@ import { handlePathErr } from "./utils";
    */
   InitAPI();
 
+  debug('菜单和 API 初始化完成')
+
   try {
     if (app.requestSingleInstanceLock()) {
       const lastOpen = config.Opened;
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const [_, existsLast] = await Promise.all([app.whenReady(), pathExists(lastOpen)])
+      debug('appReady')
       // 检查是否是初始状态或目录已变动
       if (lastOpen === undefined || !existsLast) {
         const win = Wiki.createWindow();

@@ -1,6 +1,6 @@
 import { BrowserWindow, Notification, WebContents, dialog, shell } from "electron";
 import electronIsDev from "electron-is-dev";
-import { error, info } from "electron-log";
+import { debug, warn, info } from "electron-log";
 import { copyFile, ensureDir, move, pathExists, readJson, readdir, writeFile } from "fs-extra";
 import { join, basename } from "path";
 import { config } from "./config";
@@ -311,10 +311,12 @@ export class Wiki {
 
   // Factory pattern to avoid asynchronous constructor
   static async bootstrap(dir: string, bindWin?: BrowserWindow | undefined, port = 11111): Promise<Wiki> {
+    debug('Wiki bootstrap')
     const wkType = await Wiki.getWikiType(dir)
     let service: Service | undefined = undefined
 
     const win: BrowserWindow = bindWin ? bindWin : Wiki.createWindow()
+    debug('Window 已创建')
 
     // 获取 wiki 中的自定义 ico，只有 windows 才能够进行此设置
     // 同时只有 windows 才能自动关闭菜单
@@ -336,16 +338,18 @@ export class Wiki {
     if (wkType.isSingle) {
       await win.loadFile(wkType.path)
       win.setTitle(win.webContents.getTitle())
+      debug(`${wkType.path} 已启动`)
     } else {
       // 启动 node 版
       service = await TWService.launch(dir, port, ...await this.loadCfg(dir));
       if (service.twInstance.stdout) {
         service.twInstance.stdout.once("data", async () => {
+          debug(`${dir} tiddlywiki.js 启动成功`)
           try {
             await win.loadURL(`http://localhost:${service?.port}`);
             win.setTitle(win.webContents.getTitle());
           } catch (err) {
-            error(`重试载入内容 ${err}`)
+            warn(`重试载入内容 ${err}`)
             win.reload();
           }
         });
@@ -357,6 +361,7 @@ export class Wiki {
 
     const wiki = new Wiki(dir, win, wkType, service)
     Wiki.wikis.add(wiki)
+    debug('Wiki bootstrap done')
     return wiki
   }
 

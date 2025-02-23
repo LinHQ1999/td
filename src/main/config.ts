@@ -1,6 +1,6 @@
 import { exec as _exec } from "child_process";
 import { promisify } from 'util'
-import { info } from "electron-log";
+import { debug, info } from "electron-log";
 import { default as ElectronStore, default as Store } from "electron-store";
 import { join } from "path";
 import { platform } from "os";
@@ -31,8 +31,8 @@ class Config {
       },
     });
 
-    info(this.store.store);
-    info(this.Opened);
+    debug(this.store.store);
+    debug(this.Opened);
   }
 
   /**

@@ -1,4 +1,4 @@
-import { info } from "electron-log";
+import { info, debug } from "electron-log";
 import { config } from "./config";
 import { Notification, shell } from "electron";
 import { join } from "path/win32";
@@ -19,9 +19,12 @@ class TWServices {
    * @returns
    */
   static async launch(dir: string, port: number, ...args: string[]): Promise<Service> {
+    debug('启动 tiddlywiki.js')
+
     port = TWServices.schport(port);
 
     const tw = await config.getTW();
+    debug('已获取 tiddlywiki.js 路径')
     if (!tw) {
       const guide = new Notification({ title: "请执行 npm i -g tiddlywiki" });
       guide.show();
