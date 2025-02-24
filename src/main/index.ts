@@ -1,5 +1,5 @@
 import { app, BrowserWindow, dialog } from "electron";
-import log, { debug, info, error as err, warn } from "electron-log";
+import log, { debug, info, error as err, warn, LevelOption } from "electron-log";
 import { pathExists } from "fs-extra";
 import { InitAPI } from "./api";
 import { config } from "./config";
@@ -7,9 +7,10 @@ import { initMenu } from "./menu";
 import { TWService } from "./services";
 import { Wiki } from "./wiki";
 import { handlePathErr } from "./utils";
+import { env } from "process";
 
 (async () => {
-  log.transports.file.level = 'warn'
+  log.transports.file.level = env.DEBUG ? 'warn' : 'info'
 
   debug('应用启动')
 
