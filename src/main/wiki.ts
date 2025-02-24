@@ -70,7 +70,7 @@ export class Wiki {
         ...await Wiki.loadCfg(this.dir),
       );
       // 并刷新
-      this.service.twInstance.stdout?.once("message", () => {
+      this.service.twInstance.stdout?.once("data", () => {
         this.win.reload();
         this.win.setTitle(this.win.webContents.getTitle());
       });
